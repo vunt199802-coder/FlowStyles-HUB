@@ -15,7 +15,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  getHairstylists(): Promise<User[]>;
+  getServiceProviders(role?: string): Promise<User[]>;
   
   // Service Categories
   getServiceCategories(): Promise<ServiceCategory[]>;
@@ -117,8 +117,14 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async getHairstylists(): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => user.role === 'hairstylist');
+  async getServiceProviders(role?: string): Promise<User[]> {
+    const providerRoles = ['hairstylist', 'barber', 'nail_tech', 'massage_therapist'];
+    return Array.from(this.users.values()).filter(user => {
+      if (role) {
+        return user.role === role;
+      }
+      return providerRoles.includes(user.role);
+    });
   }
 
   // Service Categories
@@ -453,12 +459,23 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed service categories
+    // Seed service categories for all beauty/wellness services
     const categories = [
-      { name: "Cuts", description: "Professional haircuts and styling", icon: "Scissors", color: "from-cyan-500 to-blue-500" },
-      { name: "Colors", description: "Hair coloring and highlighting", icon: "Palette", color: "from-purple-500 to-pink-500" },
-      { name: "Treatments", description: "Deep conditioning and repair treatments", icon: "Sparkles", color: "from-green-500 to-emerald-500" },
-      { name: "Styling", description: "Special event and everyday styling", icon: "Wand2", color: "from-orange-500 to-red-500" }
+      // Hair Services (Hairstylists & Barbers)
+      { name: "Cuts & Styling", description: "Professional haircuts, trims, and styling for all hair types", icon: "Scissors", color: "from-cyan-500 to-blue-500" },
+      { name: "Coloring", description: "Hair coloring, highlights, balayage, and color corrections", icon: "Palette", color: "from-purple-500 to-pink-500" },
+      { name: "Hair Treatments", description: "Deep conditioning, keratin treatments, and hair repair services", icon: "Sparkles", color: "from-green-500 to-emerald-500" },
+      { name: "Beard & Grooming", description: "Beard trimming, shaping, and men's grooming services", icon: "Zap", color: "from-amber-500 to-orange-500" },
+      
+      // Nail Services (Nail Techs)
+      { name: "Manicures", description: "Classic, gel, and specialty manicures with nail art options", icon: "Heart", color: "from-pink-500 to-rose-500" },
+      { name: "Pedicures", description: "Relaxing pedicures with callus removal and foot care", icon: "Sparkles", color: "from-blue-500 to-indigo-500" },
+      { name: "Nail Art & Design", description: "Custom nail art, gel extensions, and specialty nail designs", icon: "Wand2", color: "from-violet-500 to-purple-500" },
+      
+      // Massage Services (Massage Therapists)  
+      { name: "Therapeutic Massage", description: "Deep tissue, Swedish, and therapeutic massage therapy", icon: "Heart", color: "from-emerald-500 to-teal-500" },
+      { name: "Relaxation Massage", description: "Hot stone, aromatherapy, and stress-relief massage", icon: "Sparkles", color: "from-teal-500 to-cyan-500" },
+      { name: "Specialized Therapy", description: "Sports massage, prenatal massage, and injury recovery", icon: "Zap", color: "from-orange-500 to-red-500" }
     ];
     
     const categoryIds: string[] = [];
@@ -468,24 +485,36 @@ export class MemStorage implements IStorage {
       this.serviceCategories.set(id, { ...cat, id, description: cat.description, icon: cat.icon, color: cat.color });
     });
 
-    // Seed sample hairstylists
-    const hairstylists = [
+    // Seed sample service providers from all four categories
+    const serviceProviders = [
+      // Hairstylists
       { username: "sarah_chen", password: "hashed", email: "sarah@salon.com", fullName: "Sarah Chen", role: "hairstylist", bio: "Professional stylist with 8+ years experience", location: "Downtown Salon", profileImage: null },
       { username: "maria_rodriguez", password: "hashed", email: "maria@beauty.com", fullName: "Maria Rodriguez", role: "hairstylist", bio: "Color specialist and wedding expert", location: "Uptown Beauty", profileImage: null },
-      { username: "jennifer_kim", password: "hashed", email: "jennifer@style.com", fullName: "Jennifer Kim", role: "hairstylist", bio: "Modern cuts and trendy styles", location: "Style Studio", profileImage: null }
+      
+      // Barbers
+      { username: "james_wilson", password: "hashed", email: "james@barbershop.com", fullName: "James Wilson", role: "barber", bio: "Master barber specializing in classic and modern cuts", location: "Classic Cuts Barbershop", profileImage: null },
+      { username: "carlos_martinez", password: "hashed", email: "carlos@mensstyle.com", fullName: "Carlos Martinez", role: "barber", bio: "Expert in beard grooming and traditional barbering", location: "Men's Style Parlor", profileImage: null },
+      
+      // Nail Technicians
+      { username: "anna_thompson", password: "hashed", email: "anna@nailstudio.com", fullName: "Anna Thompson", role: "nail_tech", bio: "Nail artist with expertise in gel extensions and nail art", location: "Glamour Nail Studio", profileImage: null },
+      { username: "lily_chang", password: "hashed", email: "lily@nailspa.com", fullName: "Lily Chang", role: "nail_tech", bio: "Certified nail technician specializing in luxury manicures", location: "Serenity Nail Spa", profileImage: null },
+      
+      // Massage Therapists
+      { username: "michael_brown", password: "hashed", email: "michael@wellness.com", fullName: "Michael Brown", role: "massage_therapist", bio: "Licensed massage therapist with sports therapy certification", location: "Wellness Center", profileImage: null },
+      { username: "sophia_davis", password: "hashed", email: "sophia@relaxspa.com", fullName: "Sophia Davis", role: "massage_therapist", bio: "Therapeutic massage specialist with aromatherapy training", location: "Relax & Renew Spa", profileImage: null }
     ];
 
-    const hairstylistIds: string[] = [];
-    hairstylists.forEach(stylist => {
+    const serviceProviderIds: string[] = [];
+    serviceProviders.forEach(provider => {
       const id = randomUUID();
-      hairstylistIds.push(id);
+      serviceProviderIds.push(id);
       this.users.set(id, { 
-        ...stylist, 
+        ...provider, 
         id, 
-        role: "hairstylist",
+        role: provider.role,
         profileImage: null,
-        bio: stylist.bio,
-        location: stylist.location,
+        bio: provider.bio,
+        location: provider.location,
         createdAt: new Date() 
       });
     });
@@ -505,60 +534,107 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     });
 
-    // Seed services for each hairstylist
-    hairstylistIds.forEach((stylistId, index) => {
-      categoryIds.forEach(categoryId => {
-        const serviceId = randomUUID();
-        const categoryName = categories.find(c => this.serviceCategories.get(categoryId)?.name === c.name)?.name;
-        this.services.set(serviceId, {
-          id: serviceId,
-          hairstylistId: stylistId,
-          categoryId: categoryId,
-          name: `${categoryName} Service`,
-          description: `Professional ${categoryName?.toLowerCase()} service`,
-          basePrice: "65.00",
-          duration: 90,
-          isActive: true,
-          createdAt: new Date()
-        });
+    // Seed services for each service provider based on their specialization
+    serviceProviderIds.forEach((providerId, index) => {
+      const provider = serviceProviders[index];
+      
+      // Assign relevant service categories based on provider type
+      let relevantCategories: number[] = [];
+      
+      if (provider.role === 'hairstylist') {
+        relevantCategories = [0, 1, 2]; // Cuts & Styling, Coloring, Hair Treatments
+      } else if (provider.role === 'barber') {
+        relevantCategories = [0, 3]; // Cuts & Styling, Beard & Grooming
+      } else if (provider.role === 'nail_tech') {
+        relevantCategories = [4, 5, 6]; // Manicures, Pedicures, Nail Art & Design
+      } else if (provider.role === 'massage_therapist') {
+        relevantCategories = [7, 8, 9]; // Therapeutic Massage, Relaxation Massage, Specialized Therapy
+      }
+      
+      // Create services for the provider's relevant categories
+      relevantCategories.forEach(catIndex => {
+        if (catIndex < categoryIds.length) {
+          const serviceId = randomUUID();
+          const category = categories[catIndex];
+          this.services.set(serviceId, {
+            id: serviceId,
+            hairstylistId: providerId, // Note: keeping field name for schema compatibility
+            categoryId: categoryIds[catIndex],
+            name: category.name,
+            description: category.description,
+            basePrice: provider.role === 'massage_therapist' ? "85.00" : 
+                      provider.role === 'nail_tech' ? "55.00" : "65.00",
+            duration: provider.role === 'massage_therapist' ? 60 :
+                     provider.role === 'nail_tech' ? 75 : 90,
+            isActive: true,
+            createdAt: new Date()
+          });
+        }
       });
     });
 
-    // Seed sample bookings
+    // Seed sample bookings with different service providers
     const bookingIds: string[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const bookingId = randomUUID();
       bookingIds.push(bookingId);
       const appointmentDate = new Date();
       appointmentDate.setDate(appointmentDate.getDate() + i + 1);
+      const providerId = serviceProviderIds[i];
       
-      this.bookings.set(bookingId, {
-        id: bookingId,
-        clientId: clientId,
-        hairstylistId: hairstylistIds[i],
-        serviceId: Array.from(this.services.values()).find(s => s.hairstylistId === hairstylistIds[i])!.id,
-        appointmentDate: appointmentDate,
-        duration: 90,
-        status: i === 0 ? "confirmed" : i === 1 ? "pending" : "completed",
-        totalPrice: "65.00",
-        notes: "First time client",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+      // Find a service for this provider
+      const providerService = Array.from(this.services.values()).find(s => s.hairstylistId === providerId);
+      
+      if (providerService) {
+        this.bookings.set(bookingId, {
+          id: bookingId,
+          clientId: clientId,
+          hairstylistId: providerId, // Note: keeping field name for schema compatibility
+          serviceId: providerService.id,
+          appointmentDate: appointmentDate,
+          duration: parseInt(providerService.basePrice) > 70 ? 60 : 90,
+          status: i === 0 ? "confirmed" : i === 1 ? "pending" : i === 2 ? "completed" : "pending",
+          totalPrice: providerService.basePrice,
+          notes: i === 0 ? "Regular client" : "First time client",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
     }
 
-    // Seed sample messages
-    hairstylistIds.forEach((stylistId, index) => {
+    // Seed sample messages from different service providers
+    serviceProviderIds.slice(0, 5).forEach((providerId, index) => {
       const messageId = randomUUID();
+      const provider = serviceProviders[index];
+      let messageContent = '';
+      
+      // Customize message based on provider type
+      switch (provider.role) {
+        case 'hairstylist':
+          messageContent = `Hi! I'm excited to work on your hair transformation. Looking forward to our appointment!`;
+          break;
+        case 'barber':
+          messageContent = `Ready for a fresh cut and grooming session! See you at your appointment.`;
+          break;
+        case 'nail_tech':
+          messageContent = `Can't wait to create beautiful nails for you! Do you have any design preferences?`;
+          break;
+        case 'massage_therapist':
+          messageContent = `Looking forward to helping you relax and unwind during your massage session.`;
+          break;
+        default:
+          messageContent = `Hi! I'm available for your appointment. Looking forward to working with you!`;
+      }
+      
       this.messages.set(messageId, {
         id: messageId,
-        senderId: stylistId,
+        senderId: providerId,
         recipientId: clientId,
         bookingId: bookingIds[index] || null,
-        content: `Hi! I'm available for your appointment. Looking forward to working with you!`,
+        content: messageContent,
         messageType: "text",
         templateId: null,
-        isRead: index > 0,
+        isRead: index > 2,
         createdAt: new Date()
       });
     });

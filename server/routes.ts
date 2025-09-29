@@ -428,13 +428,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Hairstylists
-  app.get("/api/hairstylists", async (req, res) => {
+  // Service Providers
+  app.get("/api/service-providers", async (req, res) => {
     try {
-      const hairstylists = await storage.getHairstylists();
-      res.json(hairstylists);
+      const role = req.query.role as string;
+      const providers = await storage.getServiceProviders(role);
+      res.json(providers);
     } catch (error) {
-      res.status(500).json({ error: "Failed to get hairstylists" });
+      res.status(500).json({ error: "Failed to get service providers" });
     }
   });
 
