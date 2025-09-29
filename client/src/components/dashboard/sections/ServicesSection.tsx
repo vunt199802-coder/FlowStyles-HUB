@@ -58,15 +58,21 @@ export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps)
   const [providerCounts, setProviderCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    setProviderCounts(providersData.totals);
-  }, []);
+    if (filter?.city) {
+      // When filtering by location, show zero providers since none are wired in yet
+      setProviderCounts({
+        "Hairstylists": 0,
+        "Barbers": 0,
+        "Nail Techs": 0,
+        "Massage Therapists": 0
+      });
+    } else {
+      setProviderCounts(providersData.totals);
+    }
+  }, [filter]);
 
-  // Filter categories based on QuickRequest filter
-  const filteredCategories = filter?.category 
-    ? serviceCategories.filter(category => 
-        category.name === categoryMapping[filter.category as keyof typeof categoryMapping]
-      )
-    : serviceCategories;
+  // Show all categories - don't filter by category type
+  const filteredCategories = serviceCategories;
 
   return (
     <motion.div
@@ -101,14 +107,14 @@ export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps)
           className="flex items-center justify-between bg-slate-800/50 border border-slate-700/50 rounded-lg p-4"
         >
           <div className="flex items-center space-x-3">
-            <span className="text-slate-300">Filtering by:</span>
+            <span className="text-slate-300">Search results for:</span>
             <span className="text-cyan-400 font-medium">
               {categoryMapping[filter.category as keyof typeof categoryMapping]}
             </span>
             {filter.city && (
               <>
                 <span className="text-slate-300">in</span>
-                <span className="text-cyan-400 font-medium">{filter.city}</span>
+                <span className="text-cyan-400 font-medium">{filter.city}, {filter.state}</span>
               </>
             )}
           </div>
