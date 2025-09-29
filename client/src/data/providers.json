@@ -1,0 +1,25 @@
+{
+  "totals": {
+    "Hairstylists": 1247
+  },
+  "locations": {
+    "New York": {
+      "Hairstylists": 324
+    },
+    "Los Angeles": {
+      "Hairstylists": 298
+    },
+    "Chicago": {
+      "Hairstylists": 187
+    },
+    "Miami": {
+      "Hairstylists": 156
+    },
+    "Atlanta": {
+      "Hairstylists": 142
+    },
+    "Dallas": {
+      "Hairstylists": 140
+    }
+  }
+}
