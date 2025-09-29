@@ -1,0 +1,208 @@
+Goal
+
+Replace mock data with Flow Styles backend APIs.
+Keep current UI but wire to real endpoints.
+Add minimal pages and routing so clients can browse providers, view details, post jobs, and message providers.
+Use city/state filters globally.
+Environment and base config
+
+Create .env with VITE_API_BASE=http://localhost:3000
+Add a tiny API client with JSON/error handling and credentials include.
+Ensure CORS is allowed on backend for ClientHub origin (http://localhost:5173).
+API contracts to consume (current)
+
+Providers search: GET /api/service-providers/search?role=<hairstylist|barber|nail_tech|massage_therapist>&city=<city>&state=<state>
+Response: { providers: Array<{ id, businessName, businessType, bio, city, state, services[], portfolio[] }>, total, query }
+Note: Backend also accepts type= if role isn’t present; use role on the ClientHub side.
+Jobs:
+GET /api/jobs?status=open&category=<role>&city=<city>&state=<state>
+POST /api/jobs { clientId, title, description, category, city, state }
+Messages:
+GET /api/messages/:conversationId
+POST /api/messages { senderId, receiverId, content }
+Optional (if exposed later): GET /api/conversations?userId=<id>
+Project wiring prompts (step-by-step)
+
+Prompt 1 — Bootstrap API client
+
+Create api/client.ts with a single api() function that prefixes VITE_API_BASE, includes JSON headers, credentials, and throws on !ok.
+Add api helpers:
+searchProviders({ role, city, state })
+getOpenJobs({ category, city, state })
+postJob(payload)
+getMessages(conversationId)
+sendMessage(payload)
+Prompt 2 — Routing skeleton
+
+Install react-router.
+Routes:
+/ (Dashboard)
+/providers/:role
+/providers/:id
+/jobs/new
+/jobs (my jobs; can be stubbed initially)
+/messages (thread list stub + thread view)
+/login (stub for future)
+Add a basic Nav with links.
+Prompt 3 — Global location store
+
+Create a simple Zustand or Context store for location: { city, state, setCity, setState }.
+Use native <select> elements for state/city (CSP-safe). Preload states and a reasonable city list; allow free text as fallback if city isn’t found (for now).
+Persist to localStorage so selection survives reload.
+Prompt 4 — Dashboard cards (counts + routing)
+
+Replace mock counts with live calls:
+For each role [hairstylist, barber, nail_tech, massage_therapist], call searchProviders({ role, city, state }) in parallel and read result.total (or providers.length if total is absent).
+Clicking a card navigates to /providers/:role and preserves filters via query string (?city&state).
+Keep current card UI.
+Prompt 5 — Providers list page
+
+Read role from params and {city,state} from global store (or query).
+Fetch searchProviders({ role, city, state }).
+Render provider cards with: businessName/fullName, bio, city/state, first 3 services (name + price if available), and portfolio thumbnails.
+“View Profile” navigates to /providers/:id.
+Prompt 6 — Provider detail page
+
+If backend detail endpoint isn’t present, reuse search results: call searchProviders and find by id; cache in a simple in-memory map.
+Show full bio, all services (name, price, duration), portfolio grid, location, and buttons for “Message” and “Book Now” (book later can be a placeholder modal).
+Prompt 7 — Messages (read + send)
+
+Add a simple thread list on left (seed with 1–2 hardcoded conversations for now).
+On thread select, GET /api/messages/:conversationId and render messages (group by sender).
+Add input box; on submit POST /api/messages; optimistically append the message.
+If auth isn’t ready, allow sending as a demo user id from .env (VITE_DEMO_CLIENT_ID), and hardcode a demo provider id.
+Prompt 8 — Post Job and My Jobs
+
+/jobs/new form fields: title, description, category (use same role enum), city, state.
+POST /api/jobs on submit. Show success toast and link to /jobs.
+/jobs page: if GET /api/jobs?clientId= is not implemented yet, list recently posted jobs in local state so the page isn’t empty.
+For Discover Jobs (provider-facing in a future app), no action needed here; just ensure GET /api/jobs works now by city/state/category for when providers consume it.
+Prompt 9 — Wire dashboard “Discover Jobs” section (optional in ClientHub)
+
+If you show “Open jobs near you” on the dashboard, call GET /api/jobs?status=open&category=<role from selected filter or “all” loop>&city&state and show a few items.
+Prompt 10 — Error/loading/empty states
+
+Add spinners and skeletons for fetches.
+Handle empty results with clear messaging (“No providers found in Miami, FL. Try a different city or role.”).
+Prompt 11 — CSP-safe UI
+
+Use native select elements for state/city (no eval/new Function).
+Avoid libraries that rely on unsafe-eval.
+Prompt 12 — Config and CORS
+
+Ensure the backend allows origin http://localhost:5173 with credentials.
+All fetches use credentials: 'include' to be ready for auth later.
+Minimal code scaffolds (paste-ready)
+
+API client
+// api/client.ts
+const BASE = import.meta.env.VITE_API_BASE || '';
+export async function api(path: string, init?: RequestInit) {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
+    ...init,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || `Request failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+Endpoints
+
+// api/endpoints.ts
+export type Role = 'hairstylist' | 'barber' | 'nail_tech' | 'massage_therapist';
+
+export function searchProviders(params: { role: Role; city: string; state: string }) {
+  const qs = new URLSearchParams({ role: params.role, city: params.city, state: params.state }).toString();
+  return api(`/api/service-providers/search?${qs}`) as Promise<{
+    providers: Array<{
+      id: string;
+      businessName?: string;
+      businessType?: Role;
+      fullName?: string;
+      bio?: string;
+      city?: string;
+      state?: string;
+      services?: Array<{ name: string; basePrice?: number; duration?: number }>;
+      portfolio?: string[];
+    }>;
+    total?: number;
+  }>;
+}
+
+export function getOpenJobs(params: { category: Role; city: string; state: string }) {
+  const qs = new URLSearchParams({ status: 'open', category: params.category, city: params.city, state: params.state }).toString();
+  return api(`/api/jobs?${qs}`) as Promise<{ jobs: Array<any> }>;
+}
+
+export function postJob(payload: {
+  clientId: string;
+  title: string;
+  description: string;
+  category: Role;
+  city: string;
+  state: string;
+}) {
+  return api('/api/jobs', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function getMessages(conversationId: string) {
+  return api(`/api/messages/${conversationId}`) as Promise<{ messages: Array<any> }>;
+}
+
+export function sendMessage(payload: { senderId: string; receiverId: string; content: string }) {
+  return api('/api/messages', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+Global location store
+// store/location.ts
+import { create } from 'zustand';
+
+type State = { city: string; state: string; setCity: (c: string) => void; setState: (s: string) => void; };
+export const useLocationStore = create<State>((set) => ({
+  city: localStorage.getItem('city') || '',
+  state: localStorage.getItem('state') || '',
+  setCity: (city) => { localStorage.setItem('city', city); set({ city }); },
+  setState: (state) => { localStorage.setItem('state', state); set({ state }); },
+}));
+
+Acceptance checklist
+
+Dashboard
+
+Shows counts per category based on current city/state via live API calls.
+Clicking a card routes to /providers/:role with filters preserved in query.
+Providers
+
+/providers/:role lists providers from API; reflects changes when city/state changes.
+/providers/:id shows details; if no detail API, uses cached item from the list.
+Messages
+
+Messages view loads from GET /api/messages/:conversationId.
+Sending posts to /api/messages and updates UI.
+Jobs
+
+/jobs/new posts to /api/jobs; success navigates to /jobs with the new job visible (using local state if list API is not ready).
+Optional Dashboard “open jobs near you” populated via GET /api/jobs.
+Location
+
+Single global source of truth for city/state; used across pages.
+Stability
+
+Loading and empty states present.
+No CSP eval errors; native selects used.
+Dev commands and quick test
+
+Install and run
+npm ci
+npm run dev
+$BROWSER http://localhost:5173
+Quick manual tests
+Set city/state in header.
+Observe dashboard counts update.
+Click a role card → Providers list shows data.
+Messages tab loads seeded conversation via API.
+Post Job submits and appears in My Jobs.
