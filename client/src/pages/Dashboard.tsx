@@ -12,7 +12,6 @@ import { MessagesSection } from "@/components/dashboard/sections/MessagesSection
 
 interface QuickRequestData {
   category: string;
-  budget: string;
   urgency: string;
   state: string;
   city: string;

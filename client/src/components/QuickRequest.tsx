@@ -4,7 +4,6 @@ import { MessageSquare, X, Send } from "lucide-react";
 
 interface QuickRequestData {
   category: string;
-  budget: string;
   urgency: string;
   state: string;
   city: string;
@@ -21,13 +20,6 @@ const serviceCategories = [
   { value: "massage", label: "Massage Therapists" }
 ];
 
-const budgetRanges = [
-  { value: "50-100", label: "$50 - $100" },
-  { value: "100-200", label: "$100 - $200" },
-  { value: "200-500", label: "$200 - $500" },
-  { value: "500+", label: "$500+" }
-];
-
 const urgencyOptions = [
   { value: "today", label: "Today" },
   { value: "this-week", label: "This Week" },
@@ -39,7 +31,6 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<QuickRequestData>({
     category: "",
-    budget: "",
     urgency: "",
     state: "",
     city: ""
@@ -52,7 +43,6 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
       setIsOpen(false);
       setFormData({
         category: "",
-        budget: "",
         urgency: "",
         state: "",
         city: ""
@@ -95,7 +85,7 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-2xl p-8 w-full max-w-md z-50 border border-slate-700"
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto z-50 border border-slate-700"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
@@ -127,24 +117,6 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
                     <option value="">Select a service...</option>
                     {serviceCategories.map(cat => (
                       <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Budget */}
-                <div>
-                  <label className="block text-slate-300 text-sm font-medium mb-2">
-                    Budget Range
-                  </label>
-                  <select
-                    value={formData.budget}
-                    onChange={(e) => updateField("budget", e.target.value)}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                    data-testid="budget-select"
-                  >
-                    <option value="">Select budget...</option>
-                    {budgetRanges.map(budget => (
-                      <option key={budget.value} value={budget.value}>{budget.label}</option>
                     ))}
                   </select>
                 </div>

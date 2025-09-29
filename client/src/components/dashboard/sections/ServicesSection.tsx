@@ -5,7 +5,6 @@ import providersData from "@/data/providers.json";
 
 interface QuickRequestFilter {
   category: string;
-  budget: string;
   urgency: string;
   state: string;
   city: string;
