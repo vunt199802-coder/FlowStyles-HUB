@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
-import { User, Grid, Calendar, MessageSquare, LucideIcon } from "lucide-react";
+import { User, Grid, Calendar, MessageSquare, Menu, LucideIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 interface NavigationItem {
@@ -31,18 +33,29 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ activeSection, onSectionChange }: DashboardSidebarProps) {
   return (
-    <Sidebar className="w-64 border-r border-slate-700 bg-slate-900">
-      <SidebarContent className="bg-slate-900">
-        <div className="p-6">
-          <div className="mb-8">
-            <h1 className="text-xl font-bold text-white" data-testid="app-title">
-              Stylist Dashboard
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">Professional Services</p>
+    <Sidebar collapsible="icon" className="w-64 border-r border-slate-700 bg-slate-900">
+      <SidebarHeader className="border-b border-slate-700 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 group-data-[collapsible=icon]:justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">S</span>
+            </div>
+            <div className="group-data-[collapsible=icon]:hidden">
+              <h1 className="text-lg font-bold text-white" data-testid="app-title">
+                Stylist Dashboard
+              </h1>
+              <p className="text-xs text-slate-400">Professional Services</p>
+            </div>
           </div>
-          
+          <SidebarTrigger className="ml-auto">
+            <Menu className="h-4 w-4 text-slate-400 hover:text-cyan-400 transition-colors" />
+          </SidebarTrigger>
+        </div>
+      </SidebarHeader>
+      <SidebarContent className="bg-slate-900">
+        <div className="p-4">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-400 px-4 py-3 text-sm font-medium">
+            <SidebarGroupLabel className="text-slate-400 px-4 py-3 text-sm font-medium group-data-[collapsible=icon]:hidden">
               Navigation
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -69,18 +82,18 @@ export function DashboardSidebar({ activeSection, onSectionChange }: DashboardSi
                           className="flex items-center w-full"
                         >
                           <item.icon 
-                            className={`mr-3 h-5 w-5 transition-colors duration-300 ${
+                            className={`h-5 w-5 transition-colors duration-300 ${
                               activeSection === item.id 
                                 ? "text-cyan-400" 
                                 : "text-slate-400 group-hover:text-cyan-400"
                             }`} 
                           />
-                          <span className="font-medium">{item.title}</span>
+                          <span className="font-medium ml-3 group-data-[collapsible=icon]:hidden">{item.title}</span>
                           {activeSection === item.id && (
                             <motion.div
                               initial={{ opacity: 0, scale: 0 }}
                               animate={{ opacity: 1, scale: 1 }}
-                              className="ml-auto w-2 h-2 bg-cyan-400 rounded-full"
+                              className="ml-auto w-2 h-2 bg-cyan-400 rounded-full group-data-[collapsible=icon]:hidden"
                             />
                           )}
                         </motion.div>
