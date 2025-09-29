@@ -1,25 +1,46 @@
 {
   "totals": {
-    "Hairstylists": 1247
+    "Hairstylists": 1247,
+    "Barbers": 892,
+    "Nail Techs": 643,
+    "Massage Therapists": 534
   },
   "locations": {
     "New York": {
-      "Hairstylists": 324
+      "Hairstylists": 324,
+      "Barbers": 245,
+      "Nail Techs": 178,
+      "Massage Therapists": 145
     },
     "Los Angeles": {
-      "Hairstylists": 298
+      "Hairstylists": 298,
+      "Barbers": 221,
+      "Nail Techs": 156,
+      "Massage Therapists": 132
     },
     "Chicago": {
-      "Hairstylists": 187
+      "Hairstylists": 187,
+      "Barbers": 134,
+      "Nail Techs": 98,
+      "Massage Therapists": 87
     },
     "Miami": {
-      "Hairstylists": 156
+      "Hairstylists": 156,
+      "Barbers": 112,
+      "Nail Techs": 89,
+      "Massage Therapists": 67
     },
     "Atlanta": {
-      "Hairstylists": 142
+      "Hairstylists": 142,
+      "Barbers": 98,
+      "Nail Techs": 76,
+      "Massage Therapists": 58
     },
     "Dallas": {
-      "Hairstylists": 140
+      "Hairstylists": 140,
+      "Barbers": 82,
+      "Nail Techs": 46,
+      "Massage Therapists": 45
     }
   }
 }
