@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AIAssistant } from "@/components/AIAssistant";
+import { QuickRequest } from "@/components/QuickRequest";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProfileSection } from "@/components/dashboard/sections/ProfileSection";
@@ -8,23 +10,33 @@ import { ServicesSection } from "@/components/dashboard/sections/ServicesSection
 import { BookingsSection } from "@/components/dashboard/sections/BookingsSection";
 import { MessagesSection } from "@/components/dashboard/sections/MessagesSection";
 
-interface ContentAreaProps {
-  activeSection: string;
+interface QuickRequestData {
+  category: string;
+  budget: string;
+  urgency: string;
+  state: string;
+  city: string;
 }
 
-function ContentArea({ activeSection }: ContentAreaProps) {
+interface ContentAreaProps {
+  activeSection: string;
+  quickFilter?: QuickRequestData | null;
+  onResetFilter?: () => void;
+}
+
+function ContentArea({ activeSection, quickFilter, onResetFilter }: ContentAreaProps) {
   const getContent = () => {
     switch (activeSection) {
       case "profile":
         return <ProfileSection />;
       case "services":
-        return <ServicesSection />;
+        return <ServicesSection filter={quickFilter} onResetFilter={onResetFilter} />;
       case "bookings":
         return <BookingsSection />;
       case "messages":
         return <MessagesSection />;
       default:
-        return <ServicesSection />;
+        return <ServicesSection filter={quickFilter} onResetFilter={onResetFilter} />;
     }
   };
 
@@ -47,6 +59,18 @@ function ContentArea({ activeSection }: ContentAreaProps) {
 
 export default function Dashboard() {
   const [activeSection, setActiveSection] = useState("services");
+  const [quickFilter, setQuickFilter] = useState<QuickRequestData | null>(null);
+
+  const handleQuickRequest = (data: QuickRequestData) => {
+    console.log("Dashboard received quick request:", data);
+    setQuickFilter(data);
+    setActiveSection("services"); // Ensure we're on the services section
+  };
+
+  const handleResetFilter = () => {
+    console.log("Resetting filter");
+    setQuickFilter(null);
+  };
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -59,9 +83,15 @@ export default function Dashboard() {
           
           <div className="flex flex-col flex-1">
             <DashboardHeader />
-            <ContentArea activeSection={activeSection} />
+            <ContentArea 
+              activeSection={activeSection} 
+              quickFilter={quickFilter}
+              onResetFilter={handleResetFilter}
+            />
           </div>
         </div>
+        <QuickRequest onSubmit={handleQuickRequest} />
+        <AIAssistant />
       </SidebarProvider>
     </div>
   );

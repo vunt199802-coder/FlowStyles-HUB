@@ -1,0 +1,1787 @@
+# Dashboard Rebuild Guide
+
+This document contains all the code and instructions needed to rebuild the exact same dashboard on another platform.
+
+## Table of Contents
+1. [Project Structure](#project-structure)
+2. [Dependencies](#dependencies)
+3. [Configuration Files](#configuration-files)
+4. [Core Dashboard Files](#core-dashboard-files)
+5. [UI Components](#ui-components)
+6. [Data Files](#data-files)
+7. [Setup Instructions](#setup-instructions)
+
+## Project Structure
+
+```
+src/
+├── pages/
+│   └── Dashboard.tsx
+├── components/
+│   ├── dashboard/
+│   │   ├── DashboardSidebar.tsx
+│   │   ├── DashboardHeader.tsx
+│   │   └── sections/
+│   │       ├── ProfileSection.tsx
+│   │       ├── ServicesSection.tsx
+│   │       ├── BookingsSection.tsx
+│   │       └── MessagesSection.tsx
+│   ├── ui/ (Shadcn/UI components)
+│   ├── AIAssistant.tsx
+│   └── QuickRequest.tsx
+├── data/
+│   └── providers.json
+├── hooks/
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── lib/
+│   └── utils.ts
+├── index.css
+└── main.tsx
+```
+
+## Dependencies
+
+### Required NPM Packages
+
+```json
+{
+  "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.11",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
+    "@radix-ui/react-aspect-ratio": "^1.1.7",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-checkbox": "^1.3.2",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-context-menu": "^2.2.15",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-hover-card": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-menubar": "^1.1.15",
+    "@radix-ui/react-navigation-menu": "^1.2.13",
+    "@radix-ui/react-popover": "^1.1.14",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-radio-group": "^1.3.7",
+    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slider": "^1.3.5",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-toast": "^1.2.14",
+    "@radix-ui/react-toggle": "^1.1.9",
+    "@radix-ui/react-toggle-group": "^1.1.10",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "framer-motion": "^12.23.16",
+    "lucide-react": "^0.462.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}
+```
+
+## Configuration Files
+
+### tailwind.config.ts
+
+```typescript
+import type { Config } from "tailwindcss";
+
+export default {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;
+```
+
+### src/index.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+```
+
+## Core Dashboard Files
+
+### src/pages/Dashboard.tsx
+
+```typescript
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AIAssistant } from "@/components/AIAssistant";
+import { QuickRequest } from "@/components/QuickRequest";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { ProfileSection } from "@/components/dashboard/sections/ProfileSection";
+import { ServicesSection } from "@/components/dashboard/sections/ServicesSection";
+import { BookingsSection } from "@/components/dashboard/sections/BookingsSection";
+import { MessagesSection } from "@/components/dashboard/sections/MessagesSection";
+
+interface QuickRequestData {
+  category: string;
+  budget: string;
+  urgency: string;
+  state: string;
+  city: string;
+}
+
+interface ContentAreaProps {
+  activeSection: string;
+  quickFilter?: QuickRequestData | null;
+  onResetFilter?: () => void;
+}
+
+function ContentArea({ activeSection, quickFilter, onResetFilter }: ContentAreaProps) {
+  const getContent = () => {
+    switch (activeSection) {
+      case "profile":
+        return <ProfileSection />;
+      case "services":
+        return <ServicesSection filter={quickFilter} onResetFilter={onResetFilter} />;
+      case "bookings":
+        return <BookingsSection />;
+      case "messages":
+        return <MessagesSection />;
+      default:
+        return <ProfileSection />;
+    }
+  };
+
+  return (
+    <div className="flex-1 p-8 bg-gray-950">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSection}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {getContent()}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const [activeSection, setActiveSection] = useState("services");
+  const [quickFilter, setQuickFilter] = useState<QuickRequestData | null>(null);
+
+  const handleQuickRequest = (data: QuickRequestData) => {
+    console.log("Dashboard received quick request:", data);
+    setQuickFilter(data);
+    setActiveSection("services"); // Ensure we're on the services section
+  };
+
+  const handleResetFilter = () => {
+    console.log("Resetting filter");
+    setQuickFilter(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950">
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <DashboardSidebar 
+            activeSection={activeSection} 
+            onSectionChange={setActiveSection} 
+          />
+          
+          <div className="flex flex-col flex-1">
+            <DashboardHeader />
+            <ContentArea 
+              activeSection={activeSection} 
+              quickFilter={quickFilter}
+              onResetFilter={handleResetFilter}
+            />
+          </div>
+        </div>
+        <QuickRequest onSubmit={handleQuickRequest} />
+        <AIAssistant />
+      </SidebarProvider>
+    </div>
+  );
+}
+```
+
+### src/components/dashboard/DashboardSidebar.tsx
+
+```typescript
+import { motion } from "framer-motion";
+import { User, Grid, Calendar, MessageSquare, LucideIcon } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+
+interface NavigationItem {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+}
+
+const navigationItems: NavigationItem[] = [
+  { id: "profile", title: "Profile", icon: User },
+  { id: "services", title: "Services", icon: Grid },
+  { id: "bookings", title: "Bookings", icon: Calendar },
+  { id: "messages", title: "Messages", icon: MessageSquare },
+];
+
+interface DashboardSidebarProps {
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+}
+
+export function DashboardSidebar({ activeSection, onSectionChange }: DashboardSidebarProps) {
+  return (
+    <Sidebar className="w-64 border-r border-gray-800 bg-gray-950">
+      <SidebarContent className="bg-gray-950">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-400 px-4 py-3 text-sm font-medium">
+            Navigation
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-2 px-3">
+              {navigationItems.map((item, index) => (
+                <SidebarMenuItem key={item.id}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <SidebarMenuButton
+                      onClick={() => onSectionChange(item.id)}
+                      className={`w-full justify-start p-3 rounded-xl transition-all duration-300 group ${
+                        activeSection === item.id
+                          ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 shadow-lg border border-cyan-500/30"
+                          : "hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 text-gray-300 hover:text-cyan-300 hover:shadow-md"
+                      }`}
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center w-full"
+                      >
+                        <item.icon 
+                          className={`mr-3 h-5 w-5 transition-colors duration-300 ${
+                            activeSection === item.id 
+                              ? "text-cyan-400" 
+                              : "text-gray-400 group-hover:text-cyan-400"
+                          }`} 
+                        />
+                        <span className="font-medium">{item.title}</span>
+                        {activeSection === item.id && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="ml-auto w-2 h-2 bg-cyan-400 rounded-full"
+                          />
+                        )}
+                      </motion.div>
+                    </SidebarMenuButton>
+                  </motion.div>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+```
+
+### src/components/dashboard/DashboardHeader.tsx
+
+```typescript
+import { motion } from "framer-motion";
+import { TrendingUp, Users, Calendar, Star } from "lucide-react";
+
+const stats = [
+  { label: "Total Providers", value: "410", icon: Users, color: "from-emerald-500 to-teal-500" },
+  { label: "Active Bookings", value: "7", icon: Calendar, color: "from-blue-500 to-cyan-500" },
+  { label: "Avg Rating", value: "4.9", icon: Star, color: "from-yellow-400 to-orange-500" },
+  { label: "Growth", value: "+23%", icon: TrendingUp, color: "from-purple-500 to-pink-500" }
+];
+
+export function DashboardHeader() {
+  return (
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative p-8 bg-gray-950 border-b border-gray-800/50 overflow-hidden"
+    >
+      {/* Background gradient blobs */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-full blur-3xl"></div>
+      
+      <div className="relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Welcome back! 👋
+          </h1>
+          <p className="text-gray-400 mb-6">
+            Here's what's happening with your service network today.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap gap-4"
+        >
+          {stats.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="group relative"
+            >
+              <div className={`absolute -inset-0.5 bg-gradient-to-r ${stat.color} rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300`}></div>
+              
+              <div className="relative flex items-center gap-3 px-4 py-3 bg-gray-900/80 border border-gray-700/50 rounded-xl backdrop-blur-sm">
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${stat.color} bg-opacity-20`}>
+                  <stat.icon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-gray-400">{stat.label}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </motion.header>
+  );
+}
+```
+
+### src/components/dashboard/sections/ServicesSection.tsx
+
+```typescript
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Grid, Scissors, Leaf, Home, Wrench, ArrowRight, MapPin, Locate, RotateCcw } from "lucide-react";
+// TODO: Replace with actual API call to backend
+import providersData from "@/data/providers.json";
+
+interface ServiceFilter {
+  category: string;
+  budget: string;
+  urgency: string;
+  state: string;
+  city: string;
+}
+
+interface ServicesSectionProps {
+  filter?: ServiceFilter | null;
+  onResetFilter?: () => void;
+}
+
+const services = [
+  {
+    name: "Beauty & Wellness",
+    description: "Hair, nails, massage, and spa services",
+    icon: Scissors,
+    delay: 0
+  },
+  {
+    name: "Lawn Care",
+    description: "Landscaping, mowing, and yard maintenance",
+    icon: Leaf,
+    delay: 0.1
+  },
+  {
+    name: "Home Services",
+    description: "Cleaning, repairs, and maintenance",
+    icon: Home,
+    delay: 0.2
+  },
+  {
+    name: "Tech & Repairs",
+    description: "Device repair and tech support",
+    icon: Wrench,
+    delay: 0.3
+  }
+];
+
+export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps) {
+  const [location, setLocation] = useState("");
+  const [providerCounts, setProviderCounts] = useState<Record<string, number>>({});
+  const [isLocationFiltered, setIsLocationFiltered] = useState(false);
+  const [isQuickFiltered, setIsQuickFiltered] = useState(false);
+
+  // Service category mapping for quick filter
+  const categoryMapping: Record<string, string> = {
+    "beauty": "Beauty & Wellness",
+    "auto": "Lawn Care", 
+    "home": "Home Services",
+    "tech": "Tech & Repairs"
+  };
+
+  // Filter services based on quick request
+  const filteredServices = filter && filter.category
+    ? services.filter(service => service.name === categoryMapping[filter.category])
+    : services;
+
+  // Initialize with total provider counts from mock data
+  // TODO: Replace with API call to backend service
+  useEffect(() => {
+    if (filter && filter.category) {
+      // Apply quick filter with mock provider counts based on budget/urgency
+      setIsQuickFiltered(true);
+      const selectedService = categoryMapping[filter.category];
+      
+      // TODO: Replace with actual backend filtering logic
+      // Mock filtered count based on budget and urgency
+      let baseCount = providersData.totals[selectedService as keyof typeof providersData.totals] || 0;
+      
+      // Apply budget filter (mock logic)
+      if (filter.budget === 'low') baseCount = Math.floor(baseCount * 0.6);
+      else if (filter.budget === 'high') baseCount = Math.floor(baseCount * 0.3);
+      else baseCount = Math.floor(baseCount * 0.4);
+      
+      // Apply urgency filter (mock logic)
+      if (filter.urgency === 'today') baseCount = Math.floor(baseCount * 0.7);
+      else if (filter.urgency === 'week') baseCount = Math.floor(baseCount * 0.9);
+      
+      setProviderCounts({ [selectedService]: Math.max(baseCount, 1) });
+      setIsLocationFiltered(true);
+    } else {
+      setProviderCounts(providersData.totals);
+      setIsLocationFiltered(false);
+      setIsQuickFiltered(false);
+    }
+  }, [filter]);
+
+  // TODO: Replace with actual geolocation API service (Google Maps, Mapbox, etc.)
+  const getLocationFromCoordinates = async (lat: number, lng: number): Promise<string> => {
+    // Mock function - replace with actual reverse geocoding API
+    const mockCities = ["New York", "Los Angeles", "Chicago"];
+    return mockCities[Math.floor(Math.random() * mockCities.length)];
+  };
+
+  // TODO: Replace with backend API call to fetch location-specific provider counts
+  const filterProvidersByLocation = (locationName: string) => {
+    // Check if we have data for this specific location
+    const locationData = providersData.locations[locationName as keyof typeof providersData.locations];
+    
+    if (locationData) {
+      setProviderCounts(locationData);
+      setIsLocationFiltered(true);
+      console.log(`Showing providers for: ${locationName}`);
+    } else {
+      // Fallback: show reduced counts for unknown locations
+      const fallbackCounts: Record<string, number> = {};
+      Object.keys(providersData.totals).forEach(serviceName => {
+        fallbackCounts[serviceName] = Math.floor(providersData.totals[serviceName as keyof typeof providersData.totals] * 0.1);
+      });
+      setProviderCounts(fallbackCounts);
+      setIsLocationFiltered(true);
+      console.log(`No specific data for ${locationName}, showing fallback counts`);
+    }
+  };
+
+  const handleLocationInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocation(e.target.value);
+  };
+
+  const handleLocationSearch = () => {
+    if (location.trim()) {
+      console.log("Location entered:", location);
+      filterProvidersByLocation(location);
+    }
+  };
+
+  const handleUseMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log("User location:", { latitude, longitude });
+          
+          // TODO: Replace with actual reverse geocoding API call
+          const cityName = await getLocationFromCoordinates(latitude, longitude);
+          setLocation(cityName);
+          filterProvidersByLocation(cityName);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    } else {
+      console.log("Geolocation not supported");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4"
+      >
+        <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 bg-opacity-20 border border-emerald-500/30">
+          <Grid className="h-6 w-6 text-emerald-400" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-3xl font-bold text-white">Browse Services</h2>
+          <p className="text-gray-400">
+            {isQuickFiltered && filter
+              ? `Showing ${categoryMapping[filter.category]} providers in ${filter.state}${filter.city ? `, ${filter.city}` : ''}`
+              : "Discover providers across all categories"
+            }
+          </p>
+        </div>
+        
+        {/* Reset Filter Button */}
+        {isQuickFiltered && onResetFilter && (
+          <motion.button
+            onClick={onResetFilter}
+            className="px-4 py-2 bg-gradient-to-r from-gray-600/20 to-gray-500/20 text-gray-300 rounded-lg font-medium hover:from-gray-600/30 hover:to-gray-500/30 transition-all duration-300 flex items-center gap-2 border border-gray-500/30"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset Filters
+          </motion.button>
+        )}
+      </motion.div>
+
+      {/* Location Input Card - Only show if not quick filtered */}
+      {!isQuickFiltered && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="group relative"
+        >
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur opacity-50"></div>
+          
+          <div className="relative p-6 bg-gray-900/80 border border-gray-700/50 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+                <MapPin className="h-5 w-5 text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Find Services Near You</h3>
+            </div>
+            
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={location}
+                  onChange={handleLocationInput}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLocationSearch()}
+                  placeholder="Enter city or zip code"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300"
+                />
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleUseMyLocation}
+                className="px-4 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 flex items-center gap-2 border border-cyan-500/30"
+              >
+                <Locate className="h-4 w-4" />
+                Use My Location
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      <motion.div 
+        className="grid gap-6 md:grid-cols-2"
+        key={isQuickFiltered ? 'filtered' : 'all'} // Force re-render with animation
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {filteredServices.map((service, index) => (
+          <motion.div
+            key={service.name}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: service.delay }}
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="group relative cursor-pointer"
+          >
+            {/* Enhanced glow effect for filtered results */}
+            <div className={`absolute -inset-1 bg-gradient-to-r ${
+              isQuickFiltered 
+                ? 'from-emerald-500/30 to-teal-500/30' 
+                : 'from-cyan-500 to-blue-500'
+            } rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+            
+            <div className="relative p-6 bg-gray-900/80 border border-gray-700/50 rounded-2xl backdrop-blur-sm hover:border-cyan-400/50 transition-all duration-300 h-full">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center mb-4">
+                  <motion.div
+                    whileHover={{ scale: 1.15, rotate: 10 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30"
+                  >
+                    <service.icon className="h-6 w-6 text-cyan-400" />
+                  </motion.div>
+                </div>
+
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">{service.name}</h3>
+                     <p className="text-gray-400 text-sm mb-2">{service.name === "Lawn Care" ? "Yard work, landscaping, and seasonal maintenance" : service.description}</p>
+                    <span className="text-cyan-300 text-sm">
+                      {providerCounts[service.name] || 0} providers{isLocationFiltered ? ' nearby' : ''}
+                      {isQuickFiltered && (
+                        <span className="ml-2 text-emerald-400 text-xs">• Filtered</span>
+                      )}
+                    </span>
+                  </div>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.05, x: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-3 py-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg text-sm font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 flex items-center gap-2"
+                  >
+                    Explore <ArrowRight className="h-4 w-4" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
+```
+
+### src/components/dashboard/sections/ProfileSection.tsx
+
+```typescript
+import { motion } from "framer-motion";
+import { User, Settings, Shield, Bell, ArrowRight } from "lucide-react";
+
+const profileCards = [
+  {
+    title: "Personal Information",
+    description: "Update your name, email, and profile details",
+    icon: User,
+    gradient: "from-blue-500 to-cyan-500",
+    delay: 0
+  },
+  {
+    title: "Account Settings",
+    description: "Manage your preferences and account options",
+    icon: Settings,
+    gradient: "from-emerald-500 to-teal-500",
+    delay: 0.1
+  },
+  {
+    title: "Security Settings",
+    description: "Password, two-factor authentication, and privacy",
+    icon: Shield,
+    gradient: "from-purple-500 to-pink-500",
+    delay: 0.2
+  },
+  {
+    title: "Notifications",
+    description: "Control how and when you receive notifications",
+    icon: Bell,
+    gradient: "from-orange-500 to-red-500",
+    delay: 0.3
+  }
+];
+
+export function ProfileSection() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4"
+      >
+        <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 bg-opacity-20 border border-blue-500/30">
+          <User className="h-6 w-6 text-blue-400" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-white">Profile Settings</h2>
+          <p className="text-gray-400">Manage your account and preferences</p>
+        </div>
+      </motion.div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {profileCards.map((card, index) => (
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: card.delay }}
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="group relative cursor-pointer"
+          >
+            <div className={`absolute -inset-1 bg-gradient-to-r ${card.gradient} rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+            
+            <div className="relative p-6 bg-gray-900/80 border border-gray-700/50 rounded-2xl backdrop-blur-sm hover:border-cyan-400/50 transition-all duration-300 h-full">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center mb-4">
+                  <motion.div
+                    whileHover={{ scale: 1.15, rotate: 10 }}
+                    transition={{ duration: 0.3 }}
+                    className={`p-3 rounded-xl bg-gradient-to-r ${card.gradient} bg-opacity-20 border border-opacity-30`}
+                  >
+                    <card.icon className="h-6 w-6 text-white" />
+                  </motion.div>
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white mb-2">{card.title}</h3>
+                  <p className="text-gray-400 text-sm mb-4">{card.description}</p>
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05, x: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="self-end px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg text-sm font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 flex items-center gap-2"
+                >
+                  Configure <ArrowRight className="h-4 w-4" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+```
+
+### src/components/dashboard/sections/BookingsSection.tsx
+
+```typescript
+import { motion } from "framer-motion";
+import { Calendar, CheckCircle, Clock, MapPin, ArrowRight } from "lucide-react";
+
+const bookings = [
+  {
+    id: "1",
+    service: "Hair Styling",
+    provider: "Sarah Chen",
+    date: "Tomorrow",
+    time: "2:00 PM",
+    location: "Downtown Salon",
+    status: "confirmed"
+  },
+  {
+    id: "2", 
+    service: "House Cleaning",
+    provider: "CleanPro Services",
+    date: "Jan 15, 2025",
+    time: "10:00 AM",
+    location: "123 Main St",
+    status: "confirmed"
+  },
+  {
+    id: "3",
+    service: "Lawn Mowing",
+    provider: "GreenThumb Landscaping",
+    date: "Jan 18, 2025", 
+    time: "9:00 AM",
+    location: "456 Oak Ave",
+    status: "pending"
+  },
+  {
+    id: "4",
+    service: "Phone Repair",
+    provider: "TechFix Pro",
+    date: "Jan 20, 2025",
+    time: "3:30 PM", 
+    location: "Tech Mall",
+    status: "confirmed"
+  }
+];
+
+const getStatusIcon = (status: string) => {
+  return status === 'confirmed' ? CheckCircle : Clock;
+};
+
+const getStatusColor = (status: string) => {
+  return status === 'confirmed' ? 'text-emerald-400' : 'text-yellow-400';
+};
+
+export function BookingsSection() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4"
+      >
+        <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 bg-opacity-20 border border-blue-500/30">
+          <Calendar className="h-6 w-6 text-blue-400" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-white">Your Bookings</h2>
+          <p className="text-gray-400">Manage your upcoming appointments</p>
+        </div>
+      </motion.div>
+
+      <div className="space-y-4">
+        {bookings.map((booking, index) => {
+          const StatusIcon = getStatusIcon(booking.status);
+          
+          return (
+            <motion.div
+              key={booking.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ x: 8, scale: 1.01 }}
+              className="group relative"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+              
+              <div className="relative p-6 bg-gray-900/80 border border-gray-700/50 rounded-2xl backdrop-blur-sm hover:border-cyan-400/50 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
+                      {index < bookings.length - 1 && (
+                        <div className="w-0.5 h-16 bg-gradient-to-b from-cyan-400 to-gray-600 mt-2"></div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-1">{booking.service}</h3>
+                      <p className="text-gray-300 text-sm mb-1">with {booking.provider}</p>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{booking.date} at {booking.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{booking.location}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 ${getStatusColor(booking.status)}`}>
+                      <StatusIcon className="h-4 w-4" />
+                      <span className="text-sm capitalize">{booking.status}</span>
+                    </div>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05, x: 3 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+```
+
+### src/components/dashboard/sections/MessagesSection.tsx
+
+```typescript
+import { motion } from "framer-motion";
+import { MessageSquare, ArrowRight } from "lucide-react";
+
+const messages = [
+  {
+    id: "1",
+    sender: "Sarah Chen",
+    service: "Hair Styling",
+    preview: "Hi! Just confirming your appointment for tomorrow at 2 PM. Looking forward to seeing you!",
+    time: "2 hours ago",
+    unread: true
+  },
+  {
+    id: "2",
+    sender: "CleanPro Services", 
+    service: "House Cleaning",
+    preview: "We've scheduled your cleaning service for January 15th. Our team will arrive at 10 AM sharp.",
+    time: "1 day ago",
+    unread: false
+  },
+  {
+    id: "3",
+    sender: "GreenThumb Landscaping",
+    service: "Lawn Care",
+    preview: "Thank you for choosing our lawn care service. We'll be there on January 18th at 9 AM for the seasonal maintenance.",
+    time: "2 days ago", 
+    unread: true
+  },
+  {
+    id: "4",
+    sender: "TechFix Pro",
+    service: "Phone Repair",
+    preview: "Your phone repair is scheduled for January 20th. Please bring your device and charger.",
+    time: "3 days ago",
+    unread: false
+  },
+  {
+    id: "5",
+    sender: "Wellness Spa",
+    service: "Massage Therapy",
+    preview: "We have a cancellation tomorrow at 4 PM if you'd like to move up your appointment.",
+    time: "1 week ago",
+    unread: false
+  }
+];
+
+export function MessagesSection() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-8"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4"
+      >
+        <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 bg-opacity-20 border border-purple-500/30">
+          <MessageSquare className="h-6 w-6 text-purple-400" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-white">Messages</h2>
+          <p className="text-gray-400">Chat with your service providers</p>
+        </div>
+      </motion.div>
+
+      <div className="space-y-4">
+        {messages.map((message, index) => (
+          <motion.div
+            key={message.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            className="group relative cursor-pointer"
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+            
+            <div className="relative p-6 bg-gray-900/80 border border-gray-700/50 rounded-2xl backdrop-blur-sm hover:border-purple-400/50 transition-all duration-300">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {message.sender.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  {message.unread && (
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full absolute -top-1 -right-1 animate-pulse"></div>
+                  )}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-white font-semibold">{message.sender}</h3>
+                    <span className="text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-full">
+                      {message.service}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm mb-2 line-clamp-2">
+                    {message.preview}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">{message.time}</span>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05, x: 3 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 rounded-lg text-xs font-medium hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300 flex items-center gap-1"
+                    >
+                      Reply <ArrowRight className="h-3 w-3" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+```
+
+## Additional Components
+
+### src/components/AIAssistant.tsx
+
+```typescript
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, X, Send, Bot } from "lucide-react";
+
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
+
+export function AIAssistant() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome",
+      text: "Hi! I'm your AI assistant. How can I help you find the perfect service provider today?",
+      isUser: false,
+      timestamp: new Date()
+    }
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
+  // TODO: Replace with actual AI/OpenAI API integration
+  const generateMockResponse = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    
+    // Lawn care specific responses
+    if (message.includes('lawn') || message.includes('mow') || message.includes('grass') || message.includes('yard') || message.includes('landscaping')) {
+      const lawnResponses = [
+        "Perfect! I can help you find excellent lawn care professionals. We have landscapers, mowing services, and yard maintenance experts in your area.",
+        "Great! Our lawn care providers offer services like mowing, edging, landscaping, and seasonal yard maintenance. Let me find the best ones near you.",
+        "I'll connect you with top-rated lawn care specialists! They can help with everything from regular mowing to complete landscape design.",
+        "Excellent choice! Our lawn care network includes professionals for mowing, fertilizing, landscaping, and seasonal cleanup services."
+      ];
+      return lawnResponses[Math.floor(Math.random() * lawnResponses.length)];
+    }
+    
+    // General responses for other services
+    const responses = [
+      "I'll help you find the perfect provider for that! Let me search for qualified professionals in your area.",
+      "Great request! I can connect you with top-rated service providers nearby. Would you like me to show you some options?",
+      "I understand what you need. Let me find some excellent providers who can help with that service.",
+      "Perfect! I'll search our network of verified professionals to find the best match for your requirements.",
+      "I can definitely help you with that! Let me find some highly-rated providers in your location."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputValue,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue("");
+    setIsTyping(true);
+
+    // TODO: Replace with actual AI API call
+    // Example: const response = await openai.chat.completions.create({...})
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: generateMockResponse(inputValue),
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <>
+      {/* Floating Button */}
+      <motion.div
+        className="fixed bottom-6 right-6 z-50"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      >
+        <AnimatePresence>
+          {!isExpanded && (
+            <motion.button
+              onClick={() => setIsExpanded(true)}
+              className="relative w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 flex items-center justify-center group"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Glowing effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+              
+              <MessageCircle className="relative h-7 w-7 text-white" />
+              
+              {/* Notification dot */}
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Chat Window */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            className="fixed bottom-6 right-6 z-50 w-96 h-[500px] bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden"
+            initial={{ scale: 0, opacity: 0, originX: 1, originY: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            {/* Glowing border effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur opacity-50"></div>
+            
+            <div className="relative h-full flex flex-col">
+              {/* Header */}
+              <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+                      <Bot className="h-5 w-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">AI Assistant</h3>
+                      <p className="text-gray-400 text-sm">Always here to help</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-3 rounded-2xl ${
+                        message.isUser
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                          : 'bg-gray-800/50 text-gray-200 border border-gray-700/50'
+                      }`}
+                    >
+                      <p className="text-sm">{message.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Typing indicator */}
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="bg-gray-800/50 border border-gray-700/50 p-3 rounded-2xl">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Input */}
+              <div className="p-4 border-t border-gray-700/50">
+                <div className="flex gap-3">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Ask me anything about finding services..."
+                    className="flex-1 resize-none bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 max-h-20"
+                    rows={1}
+                  />
+                  <motion.button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() || isTyping}
+                    className="p-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-cyan-500/30"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Send className="h-5 w-5" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+```
+
+### src/components/QuickRequest.tsx
+
+```typescript
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, X } from "lucide-react";
+
+interface QuickRequestData {
+  category: string;
+  budget: string;
+  urgency: string;
+  state: string;
+  city: string;
+}
+
+interface QuickRequestProps {
+  onSubmit: (data: QuickRequestData) => void;
+}
+
+export function QuickRequest({ onSubmit }: QuickRequestProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState<QuickRequestData>({
+    category: "",
+    budget: "",
+    urgency: "",
+    state: "",
+    city: ""
+  });
+
+  const serviceCategories = [
+    { value: "beauty", label: "Beauty & Wellness" },
+    { value: "auto", label: "Lawn Care" },
+    { value: "home", label: "Home Services" },
+    { value: "tech", label: "Tech & Repairs" }
+  ];
+
+  const budgetRanges = [
+    { value: "low", label: "$50-$150" },
+    { value: "medium", label: "$150-$300" },
+    { value: "high", label: "$300+" }
+  ];
+
+  const urgencyOptions = [
+    { value: "today", label: "Today" },
+    { value: "week", label: "This week" },
+    { value: "month", label: "This month" }
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.category && formData.budget && formData.urgency && formData.state) {
+      onSubmit(formData);
+      setIsOpen(false);
+      setFormData({ category: "", budget: "", urgency: "", state: "", city: "" });
+    }
+  };
+
+  return (
+    <>
+      {/* Quick Request Button */}
+      <motion.button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 left-6 z-40 flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 group"
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
+      >
+        {/* Glowing effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+        
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+        >
+          <Zap className="relative h-5 w-5" />
+        </motion.div>
+        <span className="relative font-medium">Quick Request</span>
+      </motion.button>
+
+      {/* Modal Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-gray-900/95 border border-gray-700/50 rounded-2xl p-6 w-full max-w-md backdrop-blur-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Glowing border effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur opacity-50"></div>
+              
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
+                      <Zap className="h-5 w-5 text-emerald-400" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">Quick Request</h2>
+                  </div>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Service Category *
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
+                      required
+                    >
+                      <option value="">Select a service</option>
+                      {serviceCategories.map(category => (
+                        <option key={category.value} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Budget Range *
+                    </label>
+                    <select
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
+                      required
+                    >
+                      <option value="">Select budget</option>
+                      {budgetRanges.map(range => (
+                        <option key={range.value} value={range.value}>
+                          {range.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      When do you need it? *
+                    </label>
+                    <select
+                      value={formData.urgency}
+                      onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
+                      required
+                    >
+                      <option value="">Select timeframe</option>
+                      {urgencyOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      State *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      placeholder="e.g., California"
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      City (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      placeholder="e.g., Los Angeles"
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
+                    />
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!formData.category || !formData.budget || !formData.urgency || !formData.state}
+                  >
+                    Find Providers
+                  </motion.button>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+```
+
+## Data Files
+
+### src/data/providers.json
+
+```json
+{
+  "totals": {
+    "Beauty & Wellness": 120,
+    "Lawn Care": 80,
+    "Home Services": 150,
+    "Tech & Repairs": 60
+  },
+  "locations": {
+    "New York": {
+      "Beauty & Wellness": 25,
+      "Lawn Care": 15,
+      "Home Services": 30,
+      "Tech & Repairs": 10
+    },
+    "Los Angeles": {
+      "Beauty & Wellness": 20,
+      "Lawn Care": 12,
+      "Home Services": 25,
+      "Tech & Repairs": 8
+    },
+    "Chicago": {
+      "Beauty & Wellness": 18,
+      "Lawn Care": 10,
+      "Home Services": 22,
+      "Tech & Repairs": 7
+    }
+  }
+}
+```
+
+## UI Components (Shadcn/UI)
+
+You'll need to install and configure Shadcn/UI components. The main ones used are:
+
+### Required UI Components:
+
+```bash
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add sidebar
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add select
+npx shadcn-ui@latest add textarea
+npx shadcn-ui@latest add toast
+```
+
+### src/lib/utils.ts
+
+```typescript
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+## Setup Instructions
+
+### 1. Initialize Project
+```bash
+npx create-react-app dashboard-rebuild --template typescript
+cd dashboard-rebuild
+```
+
+### 2. Install Dependencies
+```bash
+npm install @radix-ui/react-accordion @radix-ui/react-alert-dialog @radix-ui/react-aspect-ratio @radix-ui/react-avatar @radix-ui/react-checkbox @radix-ui/react-collapsible @radix-ui/react-context-menu @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-hover-card @radix-ui/react-label @radix-ui/react-menubar @radix-ui/react-navigation-menu @radix-ui/react-popover @radix-ui/react-progress @radix-ui/react-radio-group @radix-ui/react-scroll-area @radix-ui/react-select @radix-ui/react-separator @radix-ui/react-slider @radix-ui/react-slot @radix-ui/react-switch @radix-ui/react-tabs @radix-ui/react-toast @radix-ui/react-toggle @radix-ui/react-toggle-group @radix-ui/react-tooltip class-variance-authority clsx cmdk framer-motion lucide-react react-router-dom tailwind-merge tailwindcss-animate
+```
+
+### 3. Install and Configure Tailwind CSS
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+### 4. Configure Shadcn/UI
+```bash
+npx shadcn-ui@latest init
+```
+
+### 5. File Structure Setup
+Create the folder structure as shown above and copy all the component files.
+
+### 6. Router Setup (src/main.tsx)
+```typescript
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/" element={<Dashboard />} />
+    </Routes>
+  </BrowserRouter>
+);
+```
+
+### 7. Environment Variables (Optional)
+Create `.env` file for any API keys or configuration:
+```
+REACT_APP_API_URL=your_api_url_here
+REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```
+
+## Key Features Implemented
+
+1. **Responsive Dashboard Layout** - Sidebar navigation with animated transitions
+2. **Service Management** - Browse and filter service categories with location-based search
+3. **Booking System** - Timeline view of upcoming appointments
+4. **Messaging Interface** - Chat with service providers
+5. **Profile Management** - User settings and preferences
+6. **AI Assistant** - Floating chat bot with contextual responses
+7. **Quick Request** - Fast service request modal
+8. **Location Services** - Geolocation and manual location input
+9. **Filtering System** - Budget, urgency, and category filters
+10. **Animated UI** - Smooth transitions and hover effects throughout
+
+## Customization Notes
+
+1. **Colors & Themes** - Update the CSS variables in `index.css` to match your brand
+2. **API Integration** - Replace mock data and functions with real API calls
+3. **Authentication** - Add user authentication system
+4. **Database** - Connect to your preferred database system
+5. **Payment** - Integrate payment processing if needed
+6. **Notifications** - Add real-time notification system
+7. **Analytics** - Add tracking and analytics
+
+## Performance Considerations
+
+1. **Code Splitting** - Consider implementing React.lazy for large components
+2. **Virtualization** - For large lists, consider react-window or similar
+3. **Image Optimization** - Implement lazy loading and proper image formats
+4. **API Caching** - Use React Query or SWR for efficient API caching
+5. **Bundle Analysis** - Use webpack-bundle-analyzer to optimize bundle size
+
+This comprehensive guide contains all the code and instructions needed to rebuild the exact dashboard on any platform that supports React and TypeScript.

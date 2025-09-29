@@ -1,45 +1,73 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Grid, Scissors, Zap, Sparkles, Heart, ArrowRight } from "lucide-react";
+import { Grid, Scissors, Zap, Sparkles, Heart, ArrowRight, X } from "lucide-react";
 import providersData from "@/data/providers.json";
+
+interface QuickRequestFilter {
+  category: string;
+  budget: string;
+  urgency: string;
+  state: string;
+  city: string;
+}
+
+interface ServicesSectionProps {
+  filter?: QuickRequestFilter | null;
+  onResetFilter?: () => void;
+}
 
 const serviceCategories = [
   {
     name: "Hairstylists",
-    description: "Find and connect with professional hairstylists for cuts, color, and styling.",
+    description: "Cuts, color, and professional styling",
     icon: Scissors,
     iconBg: "bg-cyan-500/20",
     iconColor: "text-cyan-400"
   },
   {
     name: "Barbers", 
-    description: "Sharp fades, beard trims, and classic barbering services.",
+    description: "Fades, beard trims, and classic barbering",
     icon: Zap,
     iconBg: "bg-orange-500/20",
     iconColor: "text-orange-400"
   },
   {
     name: "Nail Techs",
-    description: "Manicures, pedicures, and creative nail art near you.",
+    description: "Manicures, pedicures, and nail art",
     icon: Sparkles,
     iconBg: "bg-pink-500/20",
     iconColor: "text-pink-400"
   },
   {
     name: "Massage Therapists",
-    description: "Relaxation, deep tissue, and therapeutic massage services.",
+    description: "Relaxation, deep tissue, and therapy",
     icon: Heart,
     iconBg: "bg-green-500/20", 
     iconColor: "text-green-400"
   }
 ];
 
-export function ServicesSection() {
+// Category mapping for QuickRequest integration
+const categoryMapping = {
+  hairstylists: "Hairstylists",
+  barbers: "Barbers", 
+  nailtechs: "Nail Techs",
+  massage: "Massage Therapists"
+};
+
+export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps) {
   const [providerCounts, setProviderCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setProviderCounts(providersData.totals);
   }, []);
+
+  // Filter categories based on QuickRequest filter
+  const filteredCategories = filter?.category 
+    ? serviceCategories.filter(category => 
+        category.name === categoryMapping[filter.category as keyof typeof categoryMapping]
+      )
+    : serviceCategories;
 
   return (
     <motion.div
@@ -66,11 +94,45 @@ export function ServicesSection() {
         </div>
       </motion.div>
 
+      {/* Filter indicator and reset button */}
+      {filter && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between bg-slate-800/50 border border-slate-700/50 rounded-lg p-4"
+        >
+          <div className="flex items-center space-x-3">
+            <span className="text-slate-300">Filtering by:</span>
+            <span className="text-cyan-400 font-medium">
+              {categoryMapping[filter.category as keyof typeof categoryMapping]}
+            </span>
+            {filter.city && (
+              <>
+                <span className="text-slate-300">in</span>
+                <span className="text-cyan-400 font-medium">{filter.city}</span>
+              </>
+            )}
+          </div>
+          {onResetFilter && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onResetFilter}
+              className="flex items-center space-x-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white px-3 py-2 rounded-lg transition-all duration-300"
+              data-testid="reset-filter-button"
+            >
+              <X className="h-4 w-4" />
+              <span>Reset Filters</span>
+            </motion.button>
+          )}
+        </motion.div>
+      )}
+
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-white mb-6">Service Categories</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-          {serviceCategories.map((category, index) => (
+          {filteredCategories.map((category, index) => (
             <motion.div
               key={category.name}
               initial={{ opacity: 0, y: 30 }}
