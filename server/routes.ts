@@ -18,6 +18,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/service-categories/:id", async (req, res) => {
+    try {
+      const category = await storage.getServiceCategory(req.params.id);
+      if (!category) {
+        return res.status(404).json({ error: "Service category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get service category" });
+    }
+  });
+
   app.post("/api/service-categories", async (req, res) => {
     try {
       const parsed = insertServiceCategorySchema.parse(req.body);
@@ -25,6 +37,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(category);
     } catch (error) {
       res.status(400).json({ error: "Invalid service category data" });
+    }
+  });
+
+  app.put("/api/service-categories/:id", async (req, res) => {
+    try {
+      const parsed = insertServiceCategorySchema.partial().parse(req.body);
+      const category = await storage.updateServiceCategory(req.params.id, parsed);
+      if (!category) {
+        return res.status(404).json({ error: "Service category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid service category data" });
+    }
+  });
+
+  app.delete("/api/service-categories/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteServiceCategory(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Service category not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete service category" });
     }
   });
 
@@ -58,6 +95,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(service);
     } catch (error) {
       res.status(400).json({ error: "Invalid service data" });
+    }
+  });
+
+  app.put("/api/services/:id", async (req, res) => {
+    try {
+      const parsed = insertServiceSchema.partial().parse(req.body);
+      const service = await storage.updateService(req.params.id, parsed);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid service data" });
+    }
+  });
+
+  app.delete("/api/services/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteService(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete service" });
     }
   });
 
@@ -95,6 +157,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/bookings/:id", async (req, res) => {
+    try {
+      const parsed = insertBookingSchema.partial().parse(req.body);
+      const booking = await storage.updateBooking(req.params.id, parsed);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data" });
+    }
+  });
+
   app.patch("/api/bookings/:id/status", async (req, res) => {
     try {
       const { status } = req.body;
@@ -108,6 +183,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/bookings/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteBooking(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete booking" });
+    }
+  });
+
   // Portfolio
   app.get("/api/portfolio/:hairstylistId", async (req, res) => {
     try {
@@ -118,6 +205,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/portfolio/image/:id", async (req, res) => {
+    try {
+      const image = await storage.getPortfolioImage(req.params.id);
+      if (!image) {
+        return res.status(404).json({ error: "Portfolio image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get portfolio image" });
+    }
+  });
+
   app.post("/api/portfolio", async (req, res) => {
     try {
       const parsed = insertPortfolioImageSchema.parse(req.body);
@@ -125,6 +224,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(image);
     } catch (error) {
       res.status(400).json({ error: "Invalid portfolio image data" });
+    }
+  });
+
+  app.put("/api/portfolio/:id", async (req, res) => {
+    try {
+      const parsed = insertPortfolioImageSchema.partial().parse(req.body);
+      const image = await storage.updatePortfolioImage(req.params.id, parsed);
+      if (!image) {
+        return res.status(404).json({ error: "Portfolio image not found" });
+      }
+      res.json(image);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid portfolio image data" });
+    }
+  });
+
+  app.delete("/api/portfolio/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePortfolioImage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Portfolio image not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete portfolio image" });
     }
   });
 
@@ -157,12 +281,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/messages/single/:id", async (req, res) => {
+    try {
+      const message = await storage.getMessage(req.params.id);
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      res.json(message);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get message" });
+    }
+  });
+
   app.patch("/api/messages/:id/read", async (req, res) => {
     try {
       await storage.markMessageAsRead(req.params.id);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to mark message as read" });
+    }
+  });
+
+  app.delete("/api/messages/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteMessage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete message" });
     }
   });
 
@@ -176,6 +324,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/message-templates/single/:id", async (req, res) => {
+    try {
+      const template = await storage.getMessageTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Message template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get message template" });
+    }
+  });
+
   app.post("/api/message-templates", async (req, res) => {
     try {
       const parsed = insertMessageTemplateSchema.parse(req.body);
@@ -183,6 +343,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(template);
     } catch (error) {
       res.status(400).json({ error: "Invalid message template data" });
+    }
+  });
+
+  app.put("/api/message-templates/:id", async (req, res) => {
+    try {
+      const parsed = insertMessageTemplateSchema.partial().parse(req.body);
+      const template = await storage.updateMessageTemplate(req.params.id, parsed);
+      if (!template) {
+        return res.status(404).json({ error: "Message template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid message template data" });
+    }
+  });
+
+  app.delete("/api/message-templates/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteMessageTemplate(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Message template not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete message template" });
     }
   });
 
@@ -196,6 +381,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/hair-history/entry/:id", async (req, res) => {
+    try {
+      const entry = await storage.getHairHistoryEntry(req.params.id);
+      if (!entry) {
+        return res.status(404).json({ error: "Hair history entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get hair history entry" });
+    }
+  });
+
   app.post("/api/hair-history", async (req, res) => {
     try {
       const parsed = insertHairHistorySchema.parse(req.body);
@@ -203,6 +400,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(entry);
     } catch (error) {
       res.status(400).json({ error: "Invalid hair history data" });
+    }
+  });
+
+  app.put("/api/hair-history/:id", async (req, res) => {
+    try {
+      const parsed = insertHairHistorySchema.partial().parse(req.body);
+      const entry = await storage.updateHairHistoryEntry(req.params.id, parsed);
+      if (!entry) {
+        return res.status(404).json({ error: "Hair history entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid hair history data" });
+    }
+  });
+
+  app.delete("/api/hair-history/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteHairHistoryEntry(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Hair history entry not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete hair history entry" });
     }
   });
 
