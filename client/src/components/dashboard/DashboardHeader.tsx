@@ -1,12 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Activity, Star, CalendarCheck, Search } from "lucide-react";
-
-const stats = [
-  { label: "Total Providers", value: "1,247", icon: Users, color: "from-cyan-500 to-blue-500" },
-  { label: "Active Services", value: "1", icon: Activity, color: "from-green-500 to-emerald-500" },
-  { label: "Avg Rating", value: "4.8", icon: Star, color: "from-yellow-500 to-orange-500" },
-  { label: "Monthly Bookings", value: "892", icon: CalendarCheck, color: "from-purple-500 to-pink-500" }
-];
+import { Search } from "lucide-react";
 
 export function DashboardHeader() {
   return (
@@ -40,37 +33,6 @@ export function DashboardHeader() {
           </button>
         </div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
-      >
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            className="group relative"
-            data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
-          >
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 hover:border-cyan-400/40 transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm font-medium">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-                </div>
-                <div className={`p-3 bg-gradient-to-r ${stat.color} bg-opacity-20 rounded-lg`}>
-                  <stat.icon className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
     </motion.header>
   );
 }
