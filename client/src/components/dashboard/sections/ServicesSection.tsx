@@ -102,27 +102,6 @@ export function ServicesSection() {
           </motion.div>
         </div>
       </div>
-      
-      {/* Popular Locations */}
-      <div className="mt-12">
-        <h3 className="text-xl font-semibold text-white mb-6">Popular Locations</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {Object.entries(providersData.locations).map(([location, counts]) => (
-            <motion.div
-              key={location}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-4 rounded-xl text-center hover:border-cyan-400/40 transition-all"
-              data-testid={`location-${location.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              <p className="text-slate-400 text-sm">{location}</p>
-              <p className="text-white font-bold text-lg mt-1">{counts.Hairstylists}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
     </motion.div>
   );
 }
