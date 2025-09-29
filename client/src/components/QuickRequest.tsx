@@ -27,6 +27,64 @@ const urgencyOptions = [
   { value: "flexible", label: "Flexible" }
 ];
 
+const statesAndCities = {
+  "AL": ["Birmingham", "Montgomery", "Mobile", "Huntsville", "Tuscaloosa"],
+  "AK": ["Anchorage", "Fairbanks", "Juneau", "Sitka", "Ketchikan"],
+  "AZ": ["Phoenix", "Tucson", "Mesa", "Chandler", "Scottsdale", "Glendale", "Tempe"],
+  "AR": ["Little Rock", "Fort Smith", "Fayetteville", "Springdale", "Jonesboro"],
+  "CA": ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Oakland", "Sacramento", "Long Beach", "Fresno", "Bakersfield", "Anaheim", "Santa Ana", "Riverside"],
+  "CO": ["Denver", "Colorado Springs", "Aurora", "Fort Collins", "Lakewood", "Thornton"],
+  "CT": ["Hartford", "New Haven", "Stamford", "Bridgeport", "Waterbury"],
+  "DE": ["Wilmington", "Dover", "Newark", "Middletown", "Smyrna"],
+  "FL": ["Miami", "Tampa", "Orlando", "Jacksonville", "St. Petersburg", "Hialeah", "Tallahassee", "Fort Lauderdale", "Port St. Lucie", "Cape Coral"],
+  "GA": ["Atlanta", "Augusta", "Columbus", "Macon", "Savannah", "Athens"],
+  "HI": ["Honolulu", "Pearl City", "Hilo", "Kailua", "Waipahu"],
+  "ID": ["Boise", "Meridian", "Nampa", "Idaho Falls", "Pocatello"],
+  "IL": ["Chicago", "Aurora", "Peoria", "Rockford", "Joliet", "Naperville", "Springfield", "Elgin"],
+  "IN": ["Indianapolis", "Fort Wayne", "Evansville", "South Bend", "Carmel", "Fishers"],
+  "IA": ["Des Moines", "Cedar Rapids", "Davenport", "Sioux City", "Iowa City"],
+  "KS": ["Wichita", "Overland Park", "Kansas City", "Topeka", "Olathe"],
+  "KY": ["Louisville", "Lexington", "Bowling Green", "Owensboro", "Covington"],
+  "LA": ["New Orleans", "Baton Rouge", "Shreveport", "Metairie", "Lafayette"],
+  "ME": ["Portland", "Lewiston", "Bangor", "South Portland", "Auburn"],
+  "MD": ["Baltimore", "Frederick", "Rockville", "Gaithersburg", "Bowie", "Annapolis"],
+  "MA": ["Boston", "Worcester", "Springfield", "Lowell", "Cambridge", "New Bedford"],
+  "MI": ["Detroit", "Grand Rapids", "Warren", "Sterling Heights", "Lansing", "Ann Arbor"],
+  "MN": ["Minneapolis", "Saint Paul", "Rochester", "Duluth", "Bloomington"],
+  "MS": ["Jackson", "Gulfport", "Southaven", "Hattiesburg", "Biloxi"],
+  "MO": ["Kansas City", "Saint Louis", "Springfield", "Independence", "Columbia"],
+  "MT": ["Billings", "Missoula", "Great Falls", "Bozeman", "Butte"],
+  "NE": ["Omaha", "Lincoln", "Bellevue", "Grand Island", "Kearney"],
+  "NV": ["Las Vegas", "Henderson", "Reno", "North Las Vegas", "Sparks"],
+  "NH": ["Manchester", "Nashua", "Concord", "Derry", "Rochester"],
+  "NJ": ["Newark", "Jersey City", "Paterson", "Elizabeth", "Edison", "Woodbridge"],
+  "NM": ["Albuquerque", "Las Cruces", "Rio Rancho", "Santa Fe", "Roswell"],
+  "NY": ["New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle", "Mount Vernon"],
+  "NC": ["Charlotte", "Raleigh", "Greensboro", "Durham", "Winston-Salem", "Fayetteville"],
+  "ND": ["Fargo", "Bismarck", "Grand Forks", "Minot", "West Fargo"],
+  "OH": ["Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton"],
+  "OK": ["Oklahoma City", "Tulsa", "Norman", "Broken Arrow", "Lawton"],
+  "OR": ["Portland", "Salem", "Eugene", "Gresham", "Hillsboro", "Beaverton"],
+  "PA": ["Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading", "Scranton"],
+  "RI": ["Providence", "Warwick", "Cranston", "Pawtucket", "East Providence"],
+  "SC": ["Columbia", "Charleston", "North Charleston", "Mount Pleasant", "Rock Hill"],
+  "SD": ["Sioux Falls", "Rapid City", "Aberdeen", "Brookings", "Watertown"],
+  "TN": ["Nashville", "Memphis", "Knoxville", "Chattanooga", "Clarksville"],
+  "TX": ["Houston", "San Antonio", "Dallas", "Austin", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Laredo"],
+  "UT": ["Salt Lake City", "West Valley City", "Provo", "West Jordan", "Orem"],
+  "VT": ["Burlington", "Essex", "South Burlington", "Colchester", "Rutland"],
+  "VA": ["Virginia Beach", "Norfolk", "Chesapeake", "Richmond", "Newport News", "Alexandria"],
+  "WA": ["Seattle", "Spokane", "Tacoma", "Vancouver", "Bellevue", "Kent"],
+  "WV": ["Charleston", "Huntington", "Morgantown", "Parkersburg", "Wheeling"],
+  "WI": ["Milwaukee", "Madison", "Green Bay", "Kenosha", "Racine"],
+  "WY": ["Cheyenne", "Casper", "Laramie", "Gillette", "Rock Springs"]
+};
+
+const stateOptions = Object.keys(statesAndCities).map(state => ({
+  value: state,
+  label: state
+}));
+
 export function QuickRequest({ onSubmit }: QuickRequestProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<QuickRequestData>({
@@ -51,8 +109,18 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
   };
 
   const updateField = (field: keyof QuickRequestData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      // Clear city when state changes
+      if (field === 'state') {
+        newData.city = '';
+      }
+      return newData;
+    });
   };
+
+  // Get cities for selected state
+  const availableCities = formData.state ? statesAndCities[formData.state as keyof typeof statesAndCities] || [] : [];
 
   return (
     <>
@@ -144,30 +212,40 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                      State
+                      State *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.state}
                       onChange={(e) => updateField("state", e.target.value)}
-                      placeholder="e.g., CA"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                      data-testid="state-input"
-                    />
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      required
+                      data-testid="state-select"
+                    >
+                      <option value="">Select state...</option>
+                      {stateOptions.map(state => (
+                        <option key={state.value} value={state.value}>{state.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-slate-300 text-sm font-medium mb-2">
                       City *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.city}
                       onChange={(e) => updateField("city", e.target.value)}
-                      placeholder="e.g., Los Angeles"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent disabled:opacity-50"
                       required
-                      data-testid="city-input"
-                    />
+                      disabled={!formData.state}
+                      data-testid="city-select"
+                    >
+                      <option value="">
+                        {formData.state ? "Select city..." : "Select state first..."}
+                      </option>
+                      {availableCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
