@@ -5,32 +5,32 @@ import providersData from "@/data/providers.json";
 
 const serviceCategories = [
   {
-    name: "Cuts & Styling",
-    description: "Professional haircuts, blowouts, and everyday styling",
+    name: "Hairstylists",
+    description: "Find and connect with professional hairstylists for cuts, color, and styling.",
     icon: Scissors,
     iconBg: "bg-cyan-500/20",
     iconColor: "text-cyan-400"
   },
   {
-    name: "Color Services", 
-    description: "Hair coloring, highlights, balayage, and color correction",
-    icon: Sparkles,
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400"
-  },
-  {
-    name: "Hair Treatments",
-    description: "Deep conditioning, keratin treatments, and hair repair",
-    icon: Heart,
-    iconBg: "bg-green-500/20",
-    iconColor: "text-green-400"
-  },
-  {
-    name: "Special Occasions",
-    description: "Wedding hair, updos, and event styling services",
+    name: "Barbers", 
+    description: "Sharp fades, beard trims, and classic barbering services.",
     icon: Zap,
-    iconBg: "bg-pink-500/20", 
+    iconBg: "bg-orange-500/20",
+    iconColor: "text-orange-400"
+  },
+  {
+    name: "Nail Techs",
+    description: "Manicures, pedicures, and creative nail art near you.",
+    icon: Sparkles,
+    iconBg: "bg-pink-500/20",
     iconColor: "text-pink-400"
+  },
+  {
+    name: "Massage Therapists",
+    description: "Relaxation, deep tissue, and therapeutic massage services.",
+    icon: Heart,
+    iconBg: "bg-green-500/20", 
+    iconColor: "text-green-400"
   }
 ];
 
