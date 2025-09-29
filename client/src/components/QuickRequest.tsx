@@ -81,12 +81,13 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
             />
             
             {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto z-50 border border-slate-700"
-            >
+            <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-slate-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-700 pointer-events-auto"
+              >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white">Quick Request</h2>
@@ -183,6 +184,7 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
                 </motion.button>
               </form>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
