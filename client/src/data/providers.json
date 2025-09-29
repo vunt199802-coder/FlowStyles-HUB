@@ -1,46 +1,46 @@
 {
   "totals": {
-    "Hairstylists": 1247,
-    "Barbers": 892,
-    "Nail Techs": 643,
-    "Massage Therapists": 534
+    "Cuts & Styling": 456,
+    "Color Services": 389,
+    "Hair Treatments": 234,
+    "Special Occasions": 168
   },
   "locations": {
     "New York": {
-      "Hairstylists": 324,
-      "Barbers": 245,
-      "Nail Techs": 178,
-      "Massage Therapists": 145
+      "Cuts & Styling": 118,
+      "Color Services": 97,
+      "Hair Treatments": 65,
+      "Special Occasions": 44
     },
     "Los Angeles": {
-      "Hairstylists": 298,
-      "Barbers": 221,
-      "Nail Techs": 156,
-      "Massage Therapists": 132
+      "Cuts & Styling": 109,
+      "Color Services": 89,
+      "Hair Treatments": 58,
+      "Special Occasions": 42
     },
     "Chicago": {
-      "Hairstylists": 187,
-      "Barbers": 134,
-      "Nail Techs": 98,
-      "Massage Therapists": 87
+      "Cuts & Styling": 68,
+      "Color Services": 57,
+      "Hair Treatments": 38,
+      "Special Occasions": 24
     },
     "Miami": {
-      "Hairstylists": 156,
-      "Barbers": 112,
-      "Nail Techs": 89,
-      "Massage Therapists": 67
+      "Cuts & Styling": 57,
+      "Color Services": 48,
+      "Hair Treatments": 31,
+      "Special Occasions": 20
     },
     "Atlanta": {
-      "Hairstylists": 142,
-      "Barbers": 98,
-      "Nail Techs": 76,
-      "Massage Therapists": 58
+      "Cuts & Styling": 52,
+      "Color Services": 43,
+      "Hair Treatments": 28,
+      "Special Occasions": 19
     },
     "Dallas": {
-      "Hairstylists": 140,
-      "Barbers": 82,
-      "Nail Techs": 46,
-      "Massage Therapists": 45
+      "Cuts & Styling": 52,
+      "Color Services": 42,
+      "Hair Treatments": 24,
+      "Special Occasions": 19
     }
   }
 }

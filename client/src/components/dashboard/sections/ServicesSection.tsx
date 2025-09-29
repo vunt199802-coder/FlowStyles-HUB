@@ -1,52 +1,36 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Grid, Scissors, Zap, Sparkles, Heart, Star } from "lucide-react";
+import { Grid, Scissors, Zap, Sparkles, Heart, ArrowRight } from "lucide-react";
 import providersData from "@/data/providers.json";
 
 const serviceCategories = [
   {
-    name: "Hairstylists",
-    description: "Find and connect with professional hairstylists for cuts, color, and styling.",
+    name: "Cuts & Styling",
+    description: "Professional haircuts, blowouts, and everyday styling",
     icon: Scissors,
-    color: "from-cyan-500/20 to-blue-500/20",
-    borderColor: "border-cyan-500/30",
-    iconColor: "text-cyan-400",
-    hoverBorder: "hover:border-cyan-400/50",
-    buttonGradient: "from-cyan-500 to-blue-500",
-    buttonHover: "hover:from-cyan-600 hover:to-blue-600"
+    iconBg: "bg-cyan-500/20",
+    iconColor: "text-cyan-400"
   },
   {
-    name: "Barbers",
-    description: "Sharp fades, beard trims, and classic barbering services.",
-    icon: Zap,
-    color: "from-orange-500/20 to-red-500/20",
-    borderColor: "border-orange-500/30",
-    iconColor: "text-orange-400",
-    hoverBorder: "hover:border-orange-400/50",
-    buttonGradient: "from-orange-500 to-red-500",
-    buttonHover: "hover:from-orange-600 hover:to-red-600"
-  },
-  {
-    name: "Nail Techs",
-    description: "Manicures, pedicures, and creative nail art near you.",
+    name: "Color Services", 
+    description: "Hair coloring, highlights, balayage, and color correction",
     icon: Sparkles,
-    color: "from-pink-500/20 to-purple-500/20",
-    borderColor: "border-pink-500/30",
-    iconColor: "text-pink-400",
-    hoverBorder: "hover:border-pink-400/50",
-    buttonGradient: "from-pink-500 to-purple-500",
-    buttonHover: "hover:from-pink-600 hover:to-purple-600"
+    iconBg: "bg-purple-500/20",
+    iconColor: "text-purple-400"
   },
   {
-    name: "Massage Therapists",
-    description: "Relaxation, deep tissue, and therapeutic massage services.",
+    name: "Hair Treatments",
+    description: "Deep conditioning, keratin treatments, and hair repair",
     icon: Heart,
-    color: "from-green-500/20 to-emerald-500/20",
-    borderColor: "border-green-500/30",
-    iconColor: "text-green-400",
-    hoverBorder: "hover:border-green-400/50",
-    buttonGradient: "from-green-500 to-emerald-500",
-    buttonHover: "hover:from-green-600 hover:to-emerald-600"
+    iconBg: "bg-green-500/20",
+    iconColor: "text-green-400"
+  },
+  {
+    name: "Special Occasions",
+    description: "Wedding hair, updos, and event styling services",
+    icon: Zap,
+    iconBg: "bg-pink-500/20", 
+    iconColor: "text-pink-400"
   }
 ];
 
@@ -85,67 +69,49 @@ export function ServicesSection() {
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-white mb-6">Service Categories</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
           {serviceCategories.map((category, index) => (
             <motion.div
               key={category.name}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              whileHover={{ y: -8, scale: 1.02 }}
+              whileHover={{ y: -4, scale: 1.02 }}
               className="group relative cursor-pointer"
               data-testid={`service-card-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              <div className={`absolute -inset-1 bg-gradient-to-r ${category.color} rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-500`}></div>
-              
-              <div className={`relative p-8 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 rounded-2xl backdrop-blur-sm ${category.hoverBorder} transition-all duration-300`}>
-                <div className="flex items-start justify-between mb-6">
-                  <motion.div
-                    whileHover={{ scale: 1.15, rotate: 10 }}
-                    transition={{ duration: 0.3 }}
-                    className={`p-4 bg-gradient-to-r ${category.color} rounded-xl ${category.borderColor}`}
-                  >
-                    <category.icon className={`h-8 w-8 ${category.iconColor}`} />
-                  </motion.div>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-yellow-400 font-medium">4.8</span>
+              <div className="relative p-8 bg-slate-800/80 border border-slate-700/50 rounded-2xl backdrop-blur-sm hover:border-slate-600/50 transition-all duration-300 h-full">
+                <div className="flex flex-col h-full">
+                  {/* Icon */}
+                  <div className="mb-6">
+                    <div className={`w-12 h-12 ${category.iconBg} rounded-xl flex items-center justify-center`}>
+                      <category.icon className={`h-6 w-6 ${category.iconColor}`} />
+                    </div>
                   </div>
-                </div>
 
-                <h4 className="text-xl font-bold text-white mb-3">{category.name}</h4>
-                <p className="text-slate-400 mb-6 leading-relaxed">
-                  {category.description}
-                </p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Available Providers</span>
-                    <span className="text-white font-semibold" data-testid="provider-count">
-                      {providerCounts[category.name] || 0}
+                  {/* Title and Description */}
+                  <div className="flex-1">
+                    <h4 className="text-2xl font-bold text-white mb-3">{category.name}</h4>
+                    <p className="text-slate-400 leading-relaxed">
+                      {category.description}
+                    </p>
+                  </div>
+
+                  {/* Bottom section with provider count and explore button */}
+                  <div className="flex items-center justify-between mt-8">
+                    <span className="text-cyan-400 font-medium" data-testid="provider-count">
+                      {providerCounts[category.name] || 0} providers
                     </span>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center space-x-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-4 py-2 rounded-lg font-medium transition-all duration-300"
+                      data-testid={`button-explore-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <span>Explore</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </motion.button>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Avg. Response Time</span>
-                    <span className="text-white font-semibold">2.3 hours</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Starting Price</span>
-                    <span className="text-white font-semibold">$45/session</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-6 border-t border-slate-700">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`w-full bg-gradient-to-r ${category.buttonGradient} text-white py-3 rounded-lg font-medium ${category.buttonHover} transition-all duration-300`}
-                    data-testid={`button-browse-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    Browse {category.name}
-                  </motion.button>
                 </div>
               </div>
             </motion.div>
