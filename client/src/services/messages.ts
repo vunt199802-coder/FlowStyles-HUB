@@ -1,13 +1,5 @@
 import { apiFetch } from '@/api/client';
-import type { Conversation, Message } from '@/types/api';
-
-export async function getConversations(): Promise<Conversation[]> {
-  const response = await apiFetch('/api/messages');
-  if (!response.ok) {
-    throw new Error('Failed to fetch conversations');
-  }
-  return response.json();
-}
+import type { Message } from '@/types/api';
 
 export async function getConversation(conversationId: string): Promise<Message[]> {
   const response = await apiFetch(`/api/messages/${conversationId}`);
@@ -36,14 +28,4 @@ export async function sendMessage(data: {
     throw new Error('Failed to send message');
   }
   return response.json();
-}
-
-export async function markConversationRead(conversationId: string): Promise<void> {
-  const response = await apiFetch(`/api/messages/${conversationId}/read`, {
-    method: 'PATCH',
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to mark conversation as read');
-  }
 }

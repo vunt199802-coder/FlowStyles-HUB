@@ -1,16 +1,36 @@
 import { motion } from "framer-motion";
 import { MessageSquare, Send, Search, ArrowRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { getConversations } from "@/services/messages";
 import type { Conversation } from "@/types/api";
 
+const mockConversations: Conversation[] = [
+  {
+    id: "conv-1",
+    participants: [
+      { id: "user-1", fullName: "Sarah Johnson", username: "sarah.j" }
+    ],
+    lastMessage: {
+      content: "Hi! I'd like to book an appointment for next week.",
+      createdAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    unreadCount: 2
+  },
+  {
+    id: "conv-2",
+    participants: [
+      { id: "user-2", fullName: "Michael Chen", username: "m.chen" }
+    ],
+    lastMessage: {
+      content: "Thank you for the great service!",
+      createdAt: new Date(Date.now() - 7200000).toISOString()
+    },
+    unreadCount: 0
+  }
+];
+
 export function MessagesSection() {
-  const { data: conversations = [], isLoading } = useQuery<Conversation[]>({
-    queryKey: ['/api/messages'],
-    queryFn: getConversations,
-    refetchInterval: 45000, // Poll every 45 seconds
-  });
+  const conversations = mockConversations;
+  const isLoading = false;
   return (
     <motion.div
       initial={{ opacity: 0 }}
