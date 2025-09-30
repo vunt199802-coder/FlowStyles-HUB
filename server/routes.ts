@@ -253,27 +253,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messages
-  app.get("/api/messages/:userId", async (req, res) => {
+  app.get("/api/messages", async (req, res) => {
     try {
-      const messages = await storage.getMessages(req.params.userId);
-      res.json(messages);
+      const userId = req.query.userId as string;
+      const conversationId = req.query.conversationId as string;
+
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+
+      // If conversationId is provided, return messages for that conversation
+      if (conversationId) {
+        const [userId1, userId2] = conversationId.split('_');
+        
+        // Verify userId is a participant in this conversation
+        if (userId !== userId1 && userId !== userId2) {
+          return res.status(403).json({ error: "Access denied to this conversation" });
+        }
+        
+        const messages = await storage.getMessagesByConversation(userId1, userId2);
+        return res.json(messages);
+      }
+
+      // Otherwise return user's conversations
+      const conversations = await storage.getConversationsForUser(userId);
+      res.json(conversations);
     } catch (error) {
       res.status(500).json({ error: "Failed to get messages" });
     }
   });
 
-  app.get("/api/conversations/:userId1/:userId2", async (req, res) => {
-    try {
-      const messages = await storage.getConversation(req.params.userId1, req.params.userId2);
-      res.json(messages);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get conversation" });
-    }
-  });
-
   app.post("/api/messages", async (req, res) => {
     try {
-      const parsed = insertMessageSchema.parse(req.body);
+      const { senderId, receiverId, content, bookingId, messageType, templateId, metadata } = req.body;
+
+      // Validate using schema
+      const parsed = insertMessageSchema.parse({
+        senderId,
+        recipientId: receiverId,
+        content,
+        bookingId,
+        messageType,
+        templateId,
+        metadata,
+      });
+
       const message = await storage.createMessage(parsed);
       res.status(201).json(message);
     } catch (error) {
@@ -281,19 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/messages/single/:id", async (req, res) => {
-    try {
-      const message = await storage.getMessage(req.params.id);
-      if (!message) {
-        return res.status(404).json({ error: "Message not found" });
-      }
-      res.json(message);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get message" });
-    }
-  });
-
-  app.patch("/api/messages/:id/read", async (req, res) => {
+  app.patch("/api/messages/:id", async (req, res) => {
     try {
       await storage.markMessageAsRead(req.params.id);
       res.status(204).send();
