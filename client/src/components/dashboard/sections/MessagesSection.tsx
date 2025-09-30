@@ -1,37 +1,15 @@
 import { motion } from "framer-motion";
 import { MessageSquare, Send, Search, ArrowRight } from "lucide-react";
-
-const messages = [
-  {
-    id: "1",
-    provider: "Sarah Chen",
-    service: "Hair Styling",
-    lastMessage: "Hi! I'm available for your appointment tomorrow at 2 PM. Looking forward to working with you!",
-    time: "5 min ago",
-    unread: true,
-    avatar: "SC"
-  },
-  {
-    id: "2",
-    provider: "Maria Rodriguez",
-    service: "Hair Color",
-    lastMessage: "Perfect! I have all the products ready for your color treatment. See you next week!",
-    time: "1 hour ago",
-    unread: false,
-    avatar: "MR"
-  },
-  {
-    id: "3",
-    provider: "Jennifer Kim",
-    service: "Hair Cut & Wash",
-    lastMessage: "Thank you for choosing our salon! Your appointment was completed successfully.",
-    time: "2 days ago",
-    unread: false,
-    avatar: "JK"
-  }
-];
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { getConversations, type Conversation } from "@/services/messages";
 
 export function MessagesSection() {
+  const { data: conversations = [], isLoading } = useQuery<Conversation[]>({
+    queryKey: ['/api/messages'],
+    queryFn: getConversations,
+    refetchInterval: 45000, // Poll every 45 seconds
+  });
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -65,73 +43,103 @@ export function MessagesSection() {
         </div>
       </motion.div>
 
-      <div className="space-y-4">
-        {messages.map((message, index) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -4, scale: 1.01 }}
-            className="group relative cursor-pointer"
-            data-testid={`message-${message.id}`}
-          >
-            <div className={`absolute -inset-1 bg-gradient-to-r ${
-              message.unread 
-                ? 'from-cyan-500/20 to-blue-500/20' 
-                : 'from-slate-500/10 to-slate-600/10'
-            } rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-500`}></div>
+      {isLoading ? (
+        <div className="text-center text-slate-400 py-12">Loading messages...</div>
+      ) : conversations.length === 0 ? (
+        <div className="text-center text-slate-400 py-12">
+          <MessageSquare className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+          <p className="text-lg mb-2">No messages yet</p>
+          <p className="text-sm">Start a conversation with a service provider!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {conversations.map((conversation, index) => {
+            const otherParticipant = conversation.participants[0];
+            const hasUnread = conversation.unreadCount > 0;
+            const initials = otherParticipant?.fullName
+              ?.split(' ')
+              .map(n => n[0])
+              .join('')
+              .toUpperCase() || otherParticipant?.username?.substring(0, 2).toUpperCase() || '??';
             
-            <div className="relative p-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 rounded-2xl backdrop-blur-sm hover:border-cyan-400/50 transition-all duration-300">
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold ${
-                  message.unread ? 'ring-2 ring-cyan-400/50' : ''
-                }`}>
-                  {message.avatar}
-                </div>
+            return (
+              <motion.div
+                key={conversation.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="group relative cursor-pointer"
+                data-testid={`message-${conversation.id}`}
+              >
+                <div className={`absolute -inset-1 bg-gradient-to-r ${
+                  hasUnread 
+                    ? 'from-cyan-500/20 to-blue-500/20' 
+                    : 'from-slate-500/10 to-slate-600/10'
+                } rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-500`}></div>
                 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-white">{message.provider}</h3>
-                      <span className="text-sm text-slate-400">• {message.service}</span>
-                      {message.unread && (
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                      )}
+                <div className="relative p-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 rounded-2xl backdrop-blur-sm hover:border-cyan-400/50 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold ${
+                      hasUnread ? 'ring-2 ring-cyan-400/50' : ''
+                    }`}>
+                      {initials}
                     </div>
-                    <span className="text-sm text-slate-400">{message.time}</span>
-                  </div>
-                  
-                  <p className="text-slate-300 mb-4 leading-relaxed line-clamp-2">
-                    {message.lastMessage}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg text-sm font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 flex items-center gap-2"
-                      data-testid={`button-reply-${message.id}`}
-                    >
-                      <Send className="h-4 w-4" />
-                      Reply
-                    </motion.button>
                     
-                    <motion.button
-                      whileHover={{ scale: 1.05, x: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-slate-400 hover:text-cyan-300 transition-colors flex items-center gap-2"
-                      data-testid={`button-view-conversation-${message.id}`}
-                    >
-                      View Conversation <ArrowRight className="h-4 w-4" />
-                    </motion.button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-bold text-white">
+                            {otherParticipant?.fullName || otherParticipant?.username || 'Unknown'}
+                          </h3>
+                          {hasUnread && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                              <span className="text-xs text-cyan-400">{conversation.unreadCount}</span>
+                            </div>
+                          )}
+                        </div>
+                        {conversation.lastMessage && (
+                          <span className="text-sm text-slate-400">
+                            {formatDistanceToNow(new Date(conversation.lastMessage.createdAt), { addSuffix: true })}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {conversation.lastMessage && (
+                        <p className="text-slate-300 mb-4 leading-relaxed line-clamp-2">
+                          {conversation.lastMessage.content}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-lg text-sm font-medium hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 flex items-center gap-2"
+                          data-testid={`button-reply-${conversation.id}`}
+                        >
+                          <Send className="h-4 w-4" />
+                          Reply
+                        </motion.button>
+                        
+                        <motion.button
+                          whileHover={{ scale: 1.05, x: 5 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="text-slate-400 hover:text-cyan-300 transition-colors flex items-center gap-2"
+                          data-testid={`button-view-conversation-${conversation.id}`}
+                        >
+                          View Conversation <ArrowRight className="h-4 w-4" />
+                        </motion.button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </motion.div>
   );
 }
