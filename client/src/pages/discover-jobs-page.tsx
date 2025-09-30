@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Briefcase, MapPin, Clock, DollarSign, Search } from "lucide-react";
+import { Briefcase, MapPin, Clock, DollarSign, Search, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import type { Job } from "@shared/schema";
 
 export function DiscoverJobsPage() {
@@ -108,19 +109,30 @@ export function DiscoverJobsPage() {
                     {job.description}
                   </p>
 
-                  <div className="flex items-center gap-4 pt-4 border-t border-slate-700/50">
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <DollarSign className="h-4 w-4 text-emerald-400" />
-                      <span className="text-sm font-medium text-white" data-testid={`job-budget-${job.id}`}>
-                        {formatBudget(job.budgetMin, job.budgetMax)}
-                      </span>
-                    </div>
-                    
-                    {(job.city || job.state) && (
+                  <div className="space-y-3 pt-4 border-t border-slate-700/50">
+                    <div className="flex items-center gap-4 flex-wrap">
                       <div className="flex items-center gap-2 text-slate-400">
-                        <MapPin className="h-4 w-4 text-emerald-400" />
-                        <span className="text-sm" data-testid={`job-location-${job.id}`}>
-                          {[job.city, job.state].filter(Boolean).join(', ')}
+                        <DollarSign className="h-4 w-4 text-emerald-400" />
+                        <span className="text-sm font-medium text-white" data-testid={`job-budget-${job.id}`}>
+                          {formatBudget(job.budgetMin, job.budgetMax)}
+                        </span>
+                      </div>
+                      
+                      {(job.city || job.state) && (
+                        <div className="flex items-center gap-2 text-slate-400">
+                          <MapPin className="h-4 w-4 text-emerald-400" />
+                          <span className="text-sm" data-testid={`job-location-${job.id}`}>
+                            {[job.city, job.state].filter(Boolean).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {job.createdAt && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-xs" data-testid={`job-created-${job.id}`}>
+                          Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                         </span>
                       </div>
                     )}
