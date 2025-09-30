@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send } from "lucide-react";
-import { searchProviders } from "@/services/providers";
-
 interface QuickRequestData {
   category: string;
   urgency: string;

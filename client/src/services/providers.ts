@@ -11,7 +11,7 @@ const mockProviders: Provider[] = [
   {
     id: 'mock-1',
     businessName: 'Glamour Studio',
-    businessType: 'stylist',
+    businessType: 'Hairstylist',
     bio: 'Professional hair styling with 10+ years experience',
     city: 'Los Angeles',
     state: 'CA',
@@ -26,7 +26,7 @@ const mockProviders: Provider[] = [
   {
     id: 'mock-2',
     businessName: 'Elite Cuts',
-    businessType: 'barber',
+    businessType: 'Barber',
     bio: 'Master barber specializing in modern cuts',
     city: 'New York',
     state: 'NY',
@@ -37,11 +37,17 @@ const mockProviders: Provider[] = [
   }
 ];
 
+type ProvidersResponse = {
+  providers?: any[];
+  total?: number;
+  query?: Record<string, unknown>;
+};
+
 export async function searchProviders(filters: SearchFilters = {}): Promise<Provider[]> {
   const params = new URLSearchParams();
-  
+
   if (filters.type) {
-    params.append('type', filters.type.toLowerCase());
+    params.append('type', filters.type);
   }
   if (filters.city) {
     params.append('city', filters.city);
@@ -50,26 +56,24 @@ export async function searchProviders(filters: SearchFilters = {}): Promise<Prov
     params.append('state', filters.state);
   }
 
-  const response = await apiFetch(`/api/service-providers/search?${params.toString()}`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch providers');
-  }
+  const queryString = params.toString();
+  const response = await apiFetch(`/api/service-providers/search${queryString ? `?${queryString}` : ''}`);
+  const data = (await response.json()) as ProvidersResponse;
 
-  const data = await response.json();
+  const providers = Array.isArray(data.providers) ? data.providers : [];
 
   if (data.total === 0) {
     return mockProviders;
   }
 
-  return data.providers.map((provider: any) => ({
-    id: provider.id,
-    businessName: provider.fullName || provider.username,
-    businessType: provider.role,
-    bio: provider.bio,
-    city: provider.city,
-    state: provider.state,
-    services: provider.services || [],
-    portfolio: provider.portfolioPreview || [],
+  return providers.map((provider) => ({
+    id: provider.id ?? provider.userId ?? '',
+    businessName: provider.businessName ?? provider.fullName ?? provider.name ?? 'Unknown Provider',
+    businessType: provider.businessType ?? provider.type ?? provider.role ?? 'Unknown',
+    city: provider.city ?? null,
+    state: provider.state ?? null,
+    bio: provider.bio ?? null,
+    services: provider.services ?? [],
+    portfolio: provider.portfolio ?? provider.portfolioPreview ?? [],
   }));
 }

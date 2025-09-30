@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,8 +32,6 @@ import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { searchProviders } from "@/services/providers";
-import type { Provider } from "@/types/api";
-
 const bookingSchema = z.object({
   providerId: z.string().min(1, "Please select a provider"),
   serviceId: z.string().min(1, "Please select a service"),
@@ -58,50 +56,42 @@ interface BookingFormProps {
 
 export function BookingForm({ onSuccess }: BookingFormProps) {
   const { toast } = useToast();
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+
+  const providerFilters = useMemo(() => ({}), []);
+
+  const { data: providers = [], isLoading: isLoadingProviders } = useQuery({
+    queryKey: ['providers', providerFilters],
+    queryFn: () => searchProviders(providerFilters),
+    staleTime: 5 * 60 * 1000,
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load providers. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      providerId: "",
-      serviceId: "",
-      appointmentTime: "",
-      duration: "60",
-      notes: "",
+      providerId: '',
+      serviceId: '',
+      appointmentTime: '',
+      duration: '60',
+      notes: '',
     },
   });
 
-  // Fetch providers on mount
-  useEffect(() => {
-    async function loadProviders() {
-      setIsLoadingProviders(true);
-      try {
-        const data = await searchProviders({});
-        setProviders(data);
-      } catch (error) {
-        console.error("Failed to load providers:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load providers. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingProviders(false);
-      }
-    }
-    loadProviders();
-  }, [toast]);
+  const providerId = form.watch('providerId');
+  const selectedProvider = useMemo(
+    () => providers.find((p) => p.id === providerId) ?? null,
+    [providers, providerId],
+  );
 
-  // Update selected provider when provider changes
-  const providerId = form.watch("providerId");
   useEffect(() => {
-    const provider = providers.find(p => p.id === providerId);
-    setSelectedProvider(provider || null);
-    // Reset service selection when provider changes
-    form.setValue("serviceId", "");
-  }, [providerId, providers, form]);
+    form.setValue('serviceId', '');
+  }, [form, selectedProvider?.id]);
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {

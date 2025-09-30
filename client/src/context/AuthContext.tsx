@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { apiFetch } from '@/api/client';
 
 interface User {
@@ -11,8 +11,10 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (formData: { username: string; password: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  signup: (input: { firstName: string; lastName: string; email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,51 +23,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  async function loadUser() {
+  const loadUser = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await apiFetch('/api/user');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser({
-          id: userData.id,
-          role: userData.role,
-          fullName: userData.fullName,
-          email: userData.email,
-        });
-      }
+      const userData = await response.json();
+      setUser({
+        id: userData.id,
+        role: userData.role,
+        fullName: userData.fullName ?? [userData.firstName, userData.lastName].filter(Boolean).join(' '),
+        email: userData.email,
+      });
     } catch (error) {
-      console.error('Failed to load user:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
-  async function login(formData: { username: string; password: string }) {
-    const response = await apiFetch('/api/login', {
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  async function login(credentials: { email: string; password: string }) {
+    await apiFetch('/api/login', {
       method: 'POST',
-      body: JSON.stringify(formData),
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password,
+      }),
     });
 
-    if (!response.ok) {
-      throw new Error('Login failed');
-    }
+    await loadUser();
+  }
+
+  async function signup(input: { firstName: string; lastName: string; email: string; password: string }) {
+    await apiFetch('/api/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        password: input.password,
+        role: 'client',
+      }),
+    });
 
     await loadUser();
   }
 
   async function logout() {
-    await apiFetch('/api/logout', {
-      method: 'POST',
-    });
-    setUser(null);
+    try {
+      await apiFetch('/api/logout', {
+        method: 'POST',
+      });
+    } finally {
+      setUser(null);
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, reloadUser: loadUser }}>
       {children}
     </AuthContext.Provider>
   );

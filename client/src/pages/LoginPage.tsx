@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
@@ -8,22 +9,24 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const [, setLocation] = useLocation();
+
+  const loginMutation = useMutation({
+    mutationFn: (credentials: { email: string; password: string }) =>
+      login(credentials),
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     try {
-      await login({ username: email, password });
+      await loginMutation.mutateAsync({ email, password });
       setLocation('/');
     } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setIsLoading(false);
+      const message = err instanceof Error ? err.message : 'Invalid email or password';
+      setError(message);
     }
   }
 
@@ -94,11 +97,11 @@ export function LoginPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={isLoading}
+                disabled={loginMutation.isPending}
                 className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-login"
               >
-                {isLoading ? 'Logging in...' : 'Login'}
+                {loginMutation.isPending ? 'Logging in...' : 'Login'}
               </motion.button>
 
               <p className="text-center text-slate-400 text-sm">

@@ -1,12 +1,17 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, MapPin, Clock, DollarSign, Search, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import type { Job } from "@shared/schema";
+import type { Job } from "@/types/api";
+import { listJobs, type JobFilters } from "@/services/jobs";
 
 export function DiscoverJobsPage() {
-  const { data: jobs, isLoading } = useQuery<Job[]>({
-    queryKey: ["/api/jobs"],
+  const filters = useMemo<JobFilters>(() => ({}), []);
+
+  const { data: jobs = [], isLoading } = useQuery({
+    queryKey: ['jobs', filters],
+    queryFn: () => listJobs(filters),
   });
 
   const formatBudget = (min?: string | null, max?: string | null) => {

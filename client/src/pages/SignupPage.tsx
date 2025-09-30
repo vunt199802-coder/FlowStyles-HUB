@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { apiFetch } from '@/api/client';
+import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { UserPlus, Mail, Lock, User, Phone } from 'lucide-react';
+import { UserPlus, Mail, Lock, User } from 'lucide-react';
 
 export function SignupPage() {
   const [formData, setFormData] = useState({
@@ -10,11 +11,14 @@ export function SignupPage() {
     lastName: '',
     email: '',
     password: '',
-    phone: '',
   });
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useAuth();
   const [, setLocation] = useLocation();
+
+  const signupMutation = useMutation({
+    mutationFn: (input: typeof formData) => signup(input),
+  });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
@@ -26,30 +30,13 @@ export function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     try {
-      const response = await apiFetch('/api/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          fullName: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone || undefined,
-          role: 'client',
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Registration failed');
-      }
-
+      await signupMutation.mutateAsync(formData);
       setLocation('/login');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      setError(message);
     }
   }
 
@@ -151,25 +138,6 @@ export function SignupPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-slate-300 mb-2">
-                  Phone (Optional)
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    placeholder="Your phone number"
-                    data-testid="input-phone"
-                  />
-                </div>
-              </div>
-
               {error && (
                 <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm" data-testid="error-message">
                   {error}
@@ -180,11 +148,11 @@ export function SignupPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={isLoading}
+                disabled={signupMutation.isPending}
                 className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-signup"
               >
-                {isLoading ? 'Creating account...' : 'Create Account'}
+                {signupMutation.isPending ? 'Creating account...' : 'Create Account'}
               </motion.button>
 
               <p className="text-center text-slate-400 text-sm">

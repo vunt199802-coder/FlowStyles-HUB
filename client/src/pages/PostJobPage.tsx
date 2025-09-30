@@ -143,7 +143,7 @@ export default function PostJobPage() {
       return createJob(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
         title: "Success",
         description: "Job posted successfully!",

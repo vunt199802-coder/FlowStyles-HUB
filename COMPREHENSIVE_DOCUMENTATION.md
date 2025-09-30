@@ -69,17 +69,50 @@ This document provides a complete overview of the codebase architecture, includi
 The API client provides a configured fetch wrapper with authentication credentials.
 
 ```typescript
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:3000';
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!baseUrl) {
+  throw new Error('VITE_API_BASE_URL is not defined');
+}
+
+export const BASE_URL = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  return fetch(`${BASE_URL}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+  const headers = new Headers(options.headers ?? {});
+
+  if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
+    credentials: 'include',
+    headers,
   });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let message = response.statusText || 'Request failed';
+
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        message = parsed.error || parsed.message || errorText;
+      } catch {
+        message = errorText;
+      }
+    }
+
+    const error = new Error(message);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
+  }
+
+  return response;
 }
 ```
 
@@ -108,16 +141,19 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (formData: { username: string; password: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  signup: (input: { firstName: string; lastName: string; email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 }
 ```
 
 ### Authentication Flow
-1. **Initial Load:** `useEffect` calls `loadUser()` on mount
-2. **User Endpoint:** `GET /api/user` returns current user or 401
-3. **Login:** `POST /api/login` with credentials, then reload user
-4. **Logout:** `POST /api/logout` and clear user state
+1. **Initial Load:** `loadUser()` fires on mount and sets `user` or `null`.
+2. **Session Check:** `GET /api/user` returns the active account; 401 clears `user`.
+3. **Login:** `POST /api/login` with `{ email, password }`, then `reloadUser()` to refresh context.
+4. **Signup:** `POST /api/register` with `{ firstName, lastName, email, password, role: 'client' }`, finishing with `reloadUser()`.
+5. **Logout:** `POST /api/logout` and clear the cached user.
 
 ### Usage
 ```typescript
@@ -137,43 +173,43 @@ Service for searching and filtering beauty service providers.
 
 ```typescript
 export interface SearchFilters {
-  type?: string;      // Provider role: 'stylist', 'barber', etc.
+  type?: string;
   city?: string;
   state?: string;
 }
 
 export async function searchProviders(filters: SearchFilters = {}): Promise<Provider[]> {
   const params = new URLSearchParams();
-  
-  if (filters.type) params.append('role', filters.type.toLowerCase());
+
+  if (filters.type) params.append('type', filters.type);
   if (filters.city) params.append('city', filters.city);
   if (filters.state) params.append('state', filters.state);
 
-  const response = await apiFetch(`/api/service-providers?${params.toString()}`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch providers');
+  const response = await apiFetch(`/api/service-providers/search${params.toString() ? `?${params.toString()}` : ''}`);
+  const data = (await response.json()) as { providers?: any[]; total?: number };
+
+  if (data.total === 0) {
+    return mockProviders;
   }
 
-  const data = await response.json();
+  const providers = Array.isArray(data.providers) ? data.providers : [];
 
-  // Map response to Provider type
-  return data.map((provider: any) => ({
-    id: provider.id,
-    businessName: provider.fullName || provider.username,
-    businessType: provider.role,
-    bio: provider.bio,
-    city: provider.city,
-    state: provider.state,
-    services: provider.services || [],
-    portfolio: provider.portfolioPreview || [],
+  return providers.map((provider) => ({
+    id: provider.id ?? provider.userId,
+    businessName: provider.businessName ?? provider.fullName ?? provider.name,
+    businessType: provider.businessType ?? provider.role ?? provider.type,
+    bio: provider.bio ?? null,
+    city: provider.city ?? null,
+    state: provider.state ?? null,
+    services: provider.services ?? [],
+    portfolio: provider.portfolio ?? provider.portfolioPreview ?? [],
   }));
 }
 ```
 
 ### API Endpoint
-- **GET** `/api/service-providers?role={type}&city={city}&state={state}`
-- Returns array of providers with services and portfolio preview
+- **GET** `/api/service-providers/search?type=Hairstylist&city={city}&state={state}`
+- When `total === 0` the UI falls back to curated mock providers for discovery
 
 ---
 
@@ -184,21 +220,11 @@ export async function searchProviders(filters: SearchFilters = {}): Promise<Prov
 Service for managing conversations and messages between clients and providers.
 
 ```typescript
-// Fetch all conversations for current user
-export async function getConversations(): Promise<Conversation[]> {
-  const response = await apiFetch('/api/messages');
-  if (!response.ok) throw new Error('Failed to fetch conversations');
-  return response.json();
-}
-
-// Fetch messages in a specific conversation
 export async function getConversation(conversationId: string): Promise<Message[]> {
   const response = await apiFetch(`/api/messages/${conversationId}`);
-  if (!response.ok) throw new Error('Failed to fetch conversation');
   return response.json();
 }
 
-// Send a new message
 export async function sendMessage(data: {
   receiverId: string;
   content: string;
@@ -206,41 +232,32 @@ export async function sendMessage(data: {
 }): Promise<Message> {
   const response = await apiFetch('/api/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       receiverId: data.receiverId,
       content: data.content,
-      bookingId: data.bookingId || null,
+      ...(data.bookingId ? { bookingId: data.bookingId } : {}),
     }),
   });
-  
-  if (!response.ok) throw new Error('Failed to send message');
-  return response.json();
-}
 
-// Mark conversation as read
-export async function markConversationRead(conversationId: string): Promise<void> {
-  const response = await apiFetch(`/api/messages/${conversationId}/read`, {
-    method: 'PATCH',
-  });
-  
-  if (!response.ok) throw new Error('Failed to mark conversation as read');
+  return response.json();
 }
 ```
 
 ### API Endpoints
-- **GET** `/api/messages` - List all conversations
-- **GET** `/api/messages/:conversationId` - Get messages in conversation
-- **POST** `/api/messages` - Send new message
-- **PATCH** `/api/messages/:conversationId/read` - Mark as read
+- **GET** `/api/messages/:conversationId` - Fetch a single conversation thread
+- **POST** `/api/messages` - Send a message to a receiver (optionally tied to a booking)
 
-### Real-Time Updates
-The messaging system uses 45-second polling via React Query:
+> Conversation list and read-status endpoints are not yet exposed by the backend; the UI expects users to supply a known `conversationId` when testing messaging flows.
+
+### Polling Strategy
+React Query keeps the active conversation fresh with 45-second polling:
 
 ```typescript
-useQuery<Conversation[]>({
-  queryKey: ['/api/messages'],
-  refetchInterval: 45000, // Poll every 45 seconds
+useQuery({
+  queryKey: ['conversation', conversationId],
+  queryFn: () => getConversation(conversationId),
+  enabled: !!conversationId,
+  refetchInterval: 45000,
 });
 ```
 

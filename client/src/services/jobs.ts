@@ -19,51 +19,58 @@ export interface CreateJobPayload {
   urgency?: string;
 }
 
+type JobsResponse = Job[] | { jobs?: Job[] } | Array<Record<string, unknown>>;
+
 export async function listJobs(filters: JobFilters = {}): Promise<Job[]> {
   const params = new URLSearchParams();
-  
-  // Default to open status if not specified
+
   params.append('status', filters.status || 'open');
-  
   if (filters.category) params.append('category', filters.category);
   if (filters.city) params.append('city', filters.city);
   if (filters.state) params.append('state', filters.state);
 
-  const response = await apiFetch(`/api/jobs?${params.toString()}`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch jobs');
-  }
-  
-  const data = await response.json();
-  
-  // Handle responses without budget/urgency fields gracefully
-  return data.map((job: any) => ({
+  const queryString = params.toString();
+  const response = await apiFetch(`/api/jobs${queryString ? `?${queryString}` : ''}`);
+  const data = (await response.json()) as JobsResponse;
+
+  const jobsArray = Array.isArray(data)
+    ? data
+    : Array.isArray((data as { jobs?: Job[] }).jobs)
+      ? (data as { jobs?: Job[] }).jobs ?? []
+      : [];
+
+  return jobsArray.map((job: any) => ({
     id: job.id,
-    title: job.title || 'Untitled Job',
-    description: job.description || '',
-    category: job.category || 'uncategorized',
-    city: job.city || '',
-    state: job.state || '',
-    budgetMin: job.budgetMin || null,
-    budgetMax: job.budgetMax || null,
-    urgency: job.urgency || null,
-    status: job.status || 'open',
-    createdAt: job.createdAt || new Date().toISOString(),
-    poster: job.poster || undefined,
+    title: job.title ?? 'Untitled Job',
+    description: job.description ?? '',
+    category: job.category ?? 'uncategorized',
+    city: job.city ?? '',
+    state: job.state ?? '',
+    budgetMin: job.budgetMin ?? job.budget_min ?? null,
+    budgetMax: job.budgetMax ?? job.budget_max ?? null,
+    urgency: job.urgency ?? job.jobUrgency ?? null,
+    status: job.status ?? 'open',
+    createdAt: job.createdAt ?? job.created_at ?? new Date().toISOString(),
+    poster: job.poster,
   }));
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<Job> {
+  const body = {
+    title: payload.title,
+    description: payload.description,
+    category: payload.category,
+    city: payload.city,
+    state: payload.state,
+    ...(payload.budgetMin ? { budgetMin: payload.budgetMin } : {}),
+    ...(payload.budgetMax ? { budgetMax: payload.budgetMax } : {}),
+    ...(payload.urgency ? { urgency: payload.urgency } : {}),
+  };
+
   const response = await apiFetch('/api/jobs', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to create job');
-  }
-  
+
   return response.json();
 }

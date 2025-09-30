@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Grid, Scissors, Zap, Sparkles, Heart, ArrowRight, X } from "lucide-react";
-import { searchProviders, type Provider } from "@/services/providers";
+import { searchProviders } from "@/services/providers";
 
 interface QuickRequestFilter {
   category: string;
@@ -61,42 +62,43 @@ const categoryToRole: Record<string, string> = {
   "Massage Therapists": "massage_therapist"
 };
 
-export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps) {
-  const [providerCounts, setProviderCounts] = useState<Record<string, number>>({});
-  const [isLoading, setIsLoading] = useState(false);
+const DEFAULT_COUNTS: Record<string, number> = {
+  Hairstylists: 0,
+  Barbers: 0,
+  'Nail Techs': 0,
+  'Massage Therapists': 0,
+};
 
-  useEffect(() => {
-    async function fetchProviderCounts() {
-      setIsLoading(true);
-      try {
-        const counts: Record<string, number> = {};
-        
-        for (const category of serviceCategories) {
+export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps) {
+  const queryFilters = useMemo(
+    () => ({
+      city: filter?.city || undefined,
+      state: filter?.state || undefined,
+    }),
+    [filter?.city, filter?.state],
+  );
+
+  const { data: providerCounts = DEFAULT_COUNTS } = useQuery({
+    queryKey: ['providers', 'counts', queryFilters],
+    queryFn: async () => {
+      const counts: Record<string, number> = { ...DEFAULT_COUNTS };
+
+      await Promise.all(
+        serviceCategories.map(async (category) => {
           const role = categoryToRole[category.name];
           const providers = await searchProviders({
             type: role,
-            city: filter?.city,
-            state: filter?.state
+            city: queryFilters.city,
+            state: queryFilters.state,
           });
           counts[category.name] = providers.length;
-        }
-        
-        setProviderCounts(counts);
-      } catch (error) {
-        console.error('Failed to fetch provider counts:', error);
-        setProviderCounts({
-          "Hairstylists": 0,
-          "Barbers": 0,
-          "Nail Techs": 0,
-          "Massage Therapists": 0
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
+        }),
+      );
 
-    fetchProviderCounts();
-  }, [filter]);
+      return counts;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Show all categories - don't filter by category type
   const filteredCategories = serviceCategories;
