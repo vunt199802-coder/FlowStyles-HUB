@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send } from "lucide-react";
+import { searchProviders } from "@/services/providers";
 
 interface QuickRequestData {
   category: string;
@@ -94,7 +95,7 @@ export function QuickRequest({ onSubmit }: QuickRequestProps) {
     city: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.category && formData.city) {
       onSubmit(formData);

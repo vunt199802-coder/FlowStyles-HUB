@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Grid, Scissors, Zap, Sparkles, Heart, ArrowRight, X } from "lucide-react";
-import providersData from "@/data/providers.json";
+import { searchProviders, type Provider } from "@/services/providers";
 
 interface QuickRequestFilter {
   category: string;
@@ -47,28 +47,55 @@ const serviceCategories = [
 ];
 
 // Category mapping for QuickRequest integration
-const categoryMapping = {
+const categoryMapping: Record<string, string> = {
   hairstylists: "Hairstylists",
   barbers: "Barbers", 
   nailtechs: "Nail Techs",
   massage: "Massage Therapists"
 };
 
+const categoryToRole: Record<string, string> = {
+  "Hairstylists": "stylist",
+  "Barbers": "barber",
+  "Nail Techs": "nail_tech",
+  "Massage Therapists": "massage_therapist"
+};
+
 export function ServicesSection({ filter, onResetFilter }: ServicesSectionProps) {
   const [providerCounts, setProviderCounts] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (filter?.city) {
-      // When filtering by location, show zero providers since none are wired in yet
-      setProviderCounts({
-        "Hairstylists": 0,
-        "Barbers": 0,
-        "Nail Techs": 0,
-        "Massage Therapists": 0
-      });
-    } else {
-      setProviderCounts(providersData.totals);
+    async function fetchProviderCounts() {
+      setIsLoading(true);
+      try {
+        const counts: Record<string, number> = {};
+        
+        for (const category of serviceCategories) {
+          const role = categoryToRole[category.name];
+          const providers = await searchProviders({
+            type: role,
+            city: filter?.city,
+            state: filter?.state
+          });
+          counts[category.name] = providers.length;
+        }
+        
+        setProviderCounts(counts);
+      } catch (error) {
+        console.error('Failed to fetch provider counts:', error);
+        setProviderCounts({
+          "Hairstylists": 0,
+          "Barbers": 0,
+          "Nail Techs": 0,
+          "Massage Therapists": 0
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    fetchProviderCounts();
   }, [filter]);
 
   // Show all categories - don't filter by category type
