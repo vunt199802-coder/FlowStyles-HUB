@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, pgEnum, text, varchar, timestamp, integer, decimal, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, pgView, text, varchar, timestamp, integer, decimal, boolean, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -84,6 +84,7 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   messageType: text("message_type").default("text"), // 'text', 'template', 'image'
   templateId: varchar("template_id"),
+  metadata: json("metadata").$type<Record<string, any>>(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -113,6 +114,35 @@ export const hairHistory = pgTable("hair_history", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Conversations view - aggregates messages by conversation pairs
+export const conversations = pgView("conversations").as((qb) => 
+  qb.select({
+    conversationId: sql<string>`CASE 
+      WHEN sender_id < recipient_id 
+      THEN sender_id || '_' || recipient_id 
+      ELSE recipient_id || '_' || sender_id 
+    END`.as('conversation_id'),
+    userId1: sql<string>`CASE 
+      WHEN sender_id < recipient_id 
+      THEN sender_id 
+      ELSE recipient_id 
+    END`.as('user_id_1'),
+    userId2: sql<string>`CASE 
+      WHEN sender_id < recipient_id 
+      THEN recipient_id 
+      ELSE sender_id 
+    END`.as('user_id_2'),
+    lastMessageAt: sql<Date>`MAX(created_at)`.as('last_message_at'),
+    unreadCount: sql<number>`COUNT(*) FILTER (WHERE is_read = false)`.as('unread_count'),
+  })
+  .from(messages)
+  .groupBy(
+    sql`CASE WHEN sender_id < recipient_id THEN sender_id || '_' || recipient_id ELSE recipient_id || '_' || sender_id END`,
+    sql`CASE WHEN sender_id < recipient_id THEN sender_id ELSE recipient_id END`,
+    sql`CASE WHEN sender_id < recipient_id THEN recipient_id ELSE sender_id END`
+  )
+);
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -179,3 +209,5 @@ export type MessageTemplate = typeof messageTemplates.$inferSelect;
 
 export type InsertHairHistory = z.infer<typeof insertHairHistorySchema>;
 export type HairHistory = typeof hairHistory.$inferSelect;
+
+export type Conversation = typeof conversations.$inferSelect;
