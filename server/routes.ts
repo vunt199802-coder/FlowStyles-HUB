@@ -516,6 +516,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public APIs for Client Hub (unauthenticated)
+  app.get("/api/public/services", async (req, res) => {
+    try {
+      const hairstylistId = req.query.hairstylistId as string;
+      const services = await storage.getServices(hairstylistId);
+      res.json(services);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get services" });
+    }
+  });
+
+  app.get("/api/public/services/:id", async (req, res) => {
+    try {
+      const service = await storage.getService(req.params.id);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get service" });
+    }
+  });
+
+  app.post("/api/public/bookings", async (req, res) => {
+    try {
+      const parsed = insertBookingSchema.parse(req.body);
+      const booking = await storage.createBooking(parsed);
+      res.status(201).json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
