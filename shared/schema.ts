@@ -115,6 +115,23 @@ export const hairHistory = pgTable("hair_history", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Jobs posted by clients
+export const jobs = pgTable("jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  budgetMin: decimal("budget_min", { precision: 10, scale: 2 }),
+  budgetMax: decimal("budget_max", { precision: 10, scale: 2 }),
+  urgency: text("urgency"),
+  city: text("city"),
+  state: text("state"),
+  zip: text("zip"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Conversations view - aggregates messages by conversation pairs
 export const conversations = pgView("conversations").as((qb) => 
   qb.select({
@@ -185,6 +202,11 @@ export const insertHairHistorySchema = createInsertSchema(hairHistory).omit({
   createdAt: true,
 });
 
+export const insertJobSchema = createInsertSchema(jobs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -209,5 +231,8 @@ export type MessageTemplate = typeof messageTemplates.$inferSelect;
 
 export type InsertHairHistory = z.infer<typeof insertHairHistorySchema>;
 export type HairHistory = typeof hairHistory.$inferSelect;
+
+export type InsertJob = z.infer<typeof insertJobSchema>;
+export type Job = typeof jobs.$inferSelect;
 
 export type Conversation = typeof conversations.$inferSelect;
