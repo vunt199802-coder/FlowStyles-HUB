@@ -108,6 +108,10 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id,
       role: insertUser.role || "client",
+      phone: insertUser.phone || null,
+      city: insertUser.city || null,
+      state: insertUser.state || null,
+      zipCode: insertUser.zipCode || null,
       profileImage: insertUser.profileImage || null,
       bio: insertUser.bio || null,
       location: insertUser.location || null,
@@ -118,12 +122,11 @@ export class MemStorage implements IStorage {
   }
 
   async getServiceProviders(role?: string): Promise<User[]> {
-    const providerRoles = ['hairstylist', 'barber', 'nail_tech', 'massage_therapist'];
     return Array.from(this.users.values()).filter(user => {
       if (role) {
         return user.role === role;
       }
-      return providerRoles.includes(user.role);
+      return user.role === 'stylist';
     });
   }
 
@@ -488,20 +491,20 @@ export class MemStorage implements IStorage {
     // Seed sample service providers from all four categories
     const serviceProviders = [
       // Hairstylists
-      { username: "sarah_chen", password: "hashed", email: "sarah@salon.com", fullName: "Sarah Chen", role: "hairstylist", bio: "Professional stylist with 8+ years experience", location: "Downtown Salon", profileImage: null },
-      { username: "maria_rodriguez", password: "hashed", email: "maria@beauty.com", fullName: "Maria Rodriguez", role: "hairstylist", bio: "Color specialist and wedding expert", location: "Uptown Beauty", profileImage: null },
+      { username: "sarah_chen", password: "hashed", email: "sarah@salon.com", fullName: "Sarah Chen", role: "stylist" as const, bio: "Professional stylist with 8+ years experience", location: "Downtown Salon", profileImage: null, serviceType: "hairstylist" },
+      { username: "maria_rodriguez", password: "hashed", email: "maria@beauty.com", fullName: "Maria Rodriguez", role: "stylist" as const, bio: "Color specialist and wedding expert", location: "Uptown Beauty", profileImage: null, serviceType: "hairstylist" },
       
       // Barbers
-      { username: "james_wilson", password: "hashed", email: "james@barbershop.com", fullName: "James Wilson", role: "barber", bio: "Master barber specializing in classic and modern cuts", location: "Classic Cuts Barbershop", profileImage: null },
-      { username: "carlos_martinez", password: "hashed", email: "carlos@mensstyle.com", fullName: "Carlos Martinez", role: "barber", bio: "Expert in beard grooming and traditional barbering", location: "Men's Style Parlor", profileImage: null },
+      { username: "james_wilson", password: "hashed", email: "james@barbershop.com", fullName: "James Wilson", role: "stylist" as const, bio: "Master barber specializing in classic and modern cuts", location: "Classic Cuts Barbershop", profileImage: null, serviceType: "barber" },
+      { username: "carlos_martinez", password: "hashed", email: "carlos@mensstyle.com", fullName: "Carlos Martinez", role: "stylist" as const, bio: "Expert in beard grooming and traditional barbering", location: "Men's Style Parlor", profileImage: null, serviceType: "barber" },
       
       // Nail Technicians
-      { username: "anna_thompson", password: "hashed", email: "anna@nailstudio.com", fullName: "Anna Thompson", role: "nail_tech", bio: "Nail artist with expertise in gel extensions and nail art", location: "Glamour Nail Studio", profileImage: null },
-      { username: "lily_chang", password: "hashed", email: "lily@nailspa.com", fullName: "Lily Chang", role: "nail_tech", bio: "Certified nail technician specializing in luxury manicures", location: "Serenity Nail Spa", profileImage: null },
+      { username: "anna_thompson", password: "hashed", email: "anna@nailstudio.com", fullName: "Anna Thompson", role: "stylist" as const, bio: "Nail artist with expertise in gel extensions and nail art", location: "Glamour Nail Studio", profileImage: null, serviceType: "nail_tech" },
+      { username: "lily_chang", password: "hashed", email: "lily@nailspa.com", fullName: "Lily Chang", role: "stylist" as const, bio: "Certified nail technician specializing in luxury manicures", location: "Serenity Nail Spa", profileImage: null, serviceType: "nail_tech" },
       
       // Massage Therapists
-      { username: "michael_brown", password: "hashed", email: "michael@wellness.com", fullName: "Michael Brown", role: "massage_therapist", bio: "Licensed massage therapist with sports therapy certification", location: "Wellness Center", profileImage: null },
-      { username: "sophia_davis", password: "hashed", email: "sophia@relaxspa.com", fullName: "Sophia Davis", role: "massage_therapist", bio: "Therapeutic massage specialist with aromatherapy training", location: "Relax & Renew Spa", profileImage: null }
+      { username: "michael_brown", password: "hashed", email: "michael@wellness.com", fullName: "Michael Brown", role: "stylist" as const, bio: "Licensed massage therapist with sports therapy certification", location: "Wellness Center", profileImage: null, serviceType: "massage_therapist" },
+      { username: "sophia_davis", password: "hashed", email: "sophia@relaxspa.com", fullName: "Sophia Davis", role: "stylist" as const, bio: "Therapeutic massage specialist with aromatherapy training", location: "Relax & Renew Spa", profileImage: null, serviceType: "massage_therapist" }
     ];
 
     const serviceProviderIds: string[] = [];
@@ -512,9 +515,13 @@ export class MemStorage implements IStorage {
         ...provider, 
         id, 
         role: provider.role,
-        profileImage: null,
-        bio: provider.bio,
-        location: provider.location,
+        phone: null,
+        city: null,
+        state: null,
+        zipCode: null,
+        profileImage: provider.role === "stylist" ? provider.profileImage : null,
+        bio: provider.role === "stylist" ? provider.bio : null,
+        location: provider.role === "stylist" ? provider.location : null,
         createdAt: new Date() 
       });
     });
@@ -528,9 +535,13 @@ export class MemStorage implements IStorage {
       email: "client@example.com",
       fullName: "Demo Client",
       role: "client",
+      phone: null,
+      city: null,
+      state: null,
+      zipCode: null,
       profileImage: null,
       bio: null,
-      location: "New York",
+      location: null,
       createdAt: new Date()
     });
 
@@ -541,13 +552,13 @@ export class MemStorage implements IStorage {
       // Assign relevant service categories based on provider type
       let relevantCategories: number[] = [];
       
-      if (provider.role === 'hairstylist') {
+      if (provider.serviceType === 'hairstylist') {
         relevantCategories = [0, 1, 2]; // Cuts & Styling, Coloring, Hair Treatments
-      } else if (provider.role === 'barber') {
+      } else if (provider.serviceType === 'barber') {
         relevantCategories = [0, 3]; // Cuts & Styling, Beard & Grooming
-      } else if (provider.role === 'nail_tech') {
+      } else if (provider.serviceType === 'nail_tech') {
         relevantCategories = [4, 5, 6]; // Manicures, Pedicures, Nail Art & Design
-      } else if (provider.role === 'massage_therapist') {
+      } else if (provider.serviceType === 'massage_therapist') {
         relevantCategories = [7, 8, 9]; // Therapeutic Massage, Relaxation Massage, Specialized Therapy
       }
       
@@ -562,10 +573,10 @@ export class MemStorage implements IStorage {
             categoryId: categoryIds[catIndex],
             name: category.name,
             description: category.description,
-            basePrice: provider.role === 'massage_therapist' ? "85.00" : 
-                      provider.role === 'nail_tech' ? "55.00" : "65.00",
-            duration: provider.role === 'massage_therapist' ? 60 :
-                     provider.role === 'nail_tech' ? 75 : 90,
+            basePrice: provider.serviceType === 'massage_therapist' ? "85.00" : 
+                      provider.serviceType === 'nail_tech' ? "55.00" : "65.00",
+            duration: provider.serviceType === 'massage_therapist' ? 60 :
+                     provider.serviceType === 'nail_tech' ? 75 : 90,
             isActive: true,
             createdAt: new Date()
           });
@@ -609,7 +620,7 @@ export class MemStorage implements IStorage {
       let messageContent = '';
       
       // Customize message based on provider type
-      switch (provider.role) {
+      switch (provider.serviceType) {
         case 'hairstylist':
           messageContent = `Hi! I'm excited to work on your hair transformation. Looking forward to our appointment!`;
           break;
