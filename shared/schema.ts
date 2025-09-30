@@ -1,16 +1,24 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, decimal, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, text, varchar, timestamp, integer, decimal, boolean, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table (clients and hairstylists)
+// User role enum
+export const userRoleEnum = pgEnum("user_role", ["stylist", "client", "admin"]);
+
+// Shared users table (stylists, clients, and admins)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
-  role: text("role").notNull().default("client"), // 'client' or 'hairstylist'
+  role: userRoleEnum("role").notNull().default("client"),
+  phone: text("phone"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  // Stylist-specific fields (conditional/nullable)
   profileImage: text("profile_image"),
   bio: text("bio"),
   location: text("location"),
