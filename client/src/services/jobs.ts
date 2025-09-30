@@ -22,7 +22,9 @@ export interface CreateJobPayload {
 export async function listJobs(filters: JobFilters = {}): Promise<Job[]> {
   const params = new URLSearchParams();
   
-  if (filters.status) params.append('status', filters.status);
+  // Default to open status if not specified
+  params.append('status', filters.status || 'open');
+  
   if (filters.category) params.append('category', filters.category);
   if (filters.city) params.append('city', filters.city);
   if (filters.state) params.append('state', filters.state);
@@ -33,7 +35,23 @@ export async function listJobs(filters: JobFilters = {}): Promise<Job[]> {
     throw new Error('Failed to fetch jobs');
   }
   
-  return response.json();
+  const data = await response.json();
+  
+  // Handle responses without budget/urgency fields gracefully
+  return data.map((job: any) => ({
+    id: job.id,
+    title: job.title || 'Untitled Job',
+    description: job.description || '',
+    category: job.category || 'uncategorized',
+    city: job.city || '',
+    state: job.state || '',
+    budgetMin: job.budgetMin || null,
+    budgetMax: job.budgetMax || null,
+    urgency: job.urgency || null,
+    status: job.status || 'open',
+    createdAt: job.createdAt || new Date().toISOString(),
+    poster: job.poster || undefined,
+  }));
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<Job> {
