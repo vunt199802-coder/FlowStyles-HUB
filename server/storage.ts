@@ -6,7 +6,8 @@ import {
   type PortfolioImage, type InsertPortfolioImage,
   type Message, type InsertMessage,
   type MessageTemplate, type InsertMessageTemplate,
-  type HairHistory, type InsertHairHistory
+  type HairHistory, type InsertHairHistory,
+  type Conversation
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -50,6 +51,8 @@ export interface IStorage {
   getMessages(userId: string): Promise<Message[]>;
   getMessage(id: string): Promise<Message | undefined>;
   getConversation(userId1: string, userId2: string): Promise<Message[]>;
+  getConversationsForUser(userId: string): Promise<Conversation[]>;
+  getMessagesByConversation(userId1: string, userId2: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   updateMessage(id: string, message: Partial<InsertMessage>): Promise<Message | undefined>;
   markMessageAsRead(id: string): Promise<void>;
@@ -326,6 +329,57 @@ export class MemStorage implements IStorage {
     ).sort((a, b) => a.createdAt!.getTime() - b.createdAt!.getTime());
   }
 
+  async getConversationsForUser(userId: string): Promise<Conversation[]> {
+    // Get all messages involving this user
+    const userMessages = Array.from(this.messages.values()).filter(
+      msg => msg.senderId === userId || msg.recipientId === userId
+    );
+
+    // Group messages by conversation (unique pairs of users)
+    const conversationMap = new Map<string, { userId1: string; userId2: string; messages: Message[] }>();
+    
+    userMessages.forEach(msg => {
+      const otherUserId = msg.senderId === userId ? msg.recipientId : msg.senderId;
+      const conversationId = userId < otherUserId 
+        ? `${userId}_${otherUserId}` 
+        : `${otherUserId}_${userId}`;
+      
+      if (!conversationMap.has(conversationId)) {
+        conversationMap.set(conversationId, {
+          userId1: userId < otherUserId ? userId : otherUserId,
+          userId2: userId < otherUserId ? otherUserId : userId,
+          messages: []
+        });
+      }
+      conversationMap.get(conversationId)!.messages.push(msg);
+    });
+
+    // Build conversation objects
+    const conversations: Conversation[] = Array.from(conversationMap.entries()).map(([conversationId, data]) => {
+      const sortedMessages = data.messages.sort((a, b) => b.createdAt!.getTime() - a.createdAt!.getTime());
+      const lastMessageAt = sortedMessages[0]?.createdAt || new Date();
+      const unreadCount = data.messages.filter(msg => msg.recipientId === userId && !msg.isRead).length;
+
+      return {
+        conversationId,
+        userId1: data.userId1,
+        userId2: data.userId2,
+        lastMessageAt,
+        unreadCount
+      };
+    });
+
+    // Sort by most recent message first
+    return conversations.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+  }
+
+  async getMessagesByConversation(userId1: string, userId2: string): Promise<Message[]> {
+    return Array.from(this.messages.values()).filter(
+      msg => (msg.senderId === userId1 && msg.recipientId === userId2) || 
+             (msg.senderId === userId2 && msg.recipientId === userId1)
+    ).sort((a, b) => a.createdAt!.getTime() - b.createdAt!.getTime());
+  }
+
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = randomUUID();
     const message: Message = { 
@@ -334,6 +388,7 @@ export class MemStorage implements IStorage {
       bookingId: insertMessage.bookingId || null,
       messageType: insertMessage.messageType || "text",
       templateId: insertMessage.templateId || null,
+      metadata: insertMessage.metadata || null,
       isRead: insertMessage.isRead ?? false,
       createdAt: new Date()
     };
@@ -645,6 +700,7 @@ export class MemStorage implements IStorage {
         content: messageContent,
         messageType: "text",
         templateId: null,
+        metadata: null,
         isRead: index > 2,
         createdAt: new Date()
       });
