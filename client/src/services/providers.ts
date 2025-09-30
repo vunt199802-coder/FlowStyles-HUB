@@ -1,26 +1,5 @@
 import { apiFetch } from '@/api/client';
-
-export interface Provider {
-  id: string;
-  businessName: string;
-  businessType: string;
-  bio: string | null;
-  city: string | null;
-  state: string | null;
-  services?: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    basePrice: string;
-    duration: number;
-  }>;
-  portfolio?: Array<{
-    id: string;
-    afterImage: string;
-    beforeImage: string | null;
-    title: string | null;
-  }>;
-}
+import type { Provider } from '@/types/api';
 
 export interface SearchFilters {
   type?: string;

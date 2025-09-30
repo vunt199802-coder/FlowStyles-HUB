@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { MessageSquare, Send, Search, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { getConversations, type Conversation } from "@/services/messages";
+import { getConversations } from "@/services/messages";
+import type { Conversation } from "@/types/api";
 
 export function MessagesSection() {
   const { data: conversations = [], isLoading } = useQuery<Conversation[]>({

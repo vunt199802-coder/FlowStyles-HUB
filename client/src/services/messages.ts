@@ -1,28 +1,5 @@
 import { apiFetch } from '@/api/client';
-
-export interface Conversation {
-  id: string;
-  participants: Array<{
-    id: string;
-    fullName: string;
-    username: string;
-  }>;
-  lastMessage?: {
-    content: string;
-    createdAt: string;
-  };
-  unreadCount: number;
-}
-
-export interface Message {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  bookingId: string | null;
-  isRead: boolean;
-  createdAt: string;
-}
+import type { Conversation, Message } from '@/types/api';
 
 export async function getConversations(): Promise<Conversation[]> {
   const response = await apiFetch('/api/messages');

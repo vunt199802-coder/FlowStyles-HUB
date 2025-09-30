@@ -31,7 +31,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { searchProviders, type Provider } from "@/services/providers";
+import { searchProviders } from "@/services/providers";
+import type { Provider } from "@/types/api";
 
 const bookingSchema = z.object({
   providerId: z.string().min(1, "Please select a provider"),

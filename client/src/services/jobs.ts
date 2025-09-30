@@ -1,23 +1,5 @@
 import { apiFetch } from '@/api/client';
-
-export interface Job {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  city: string;
-  state: string;
-  budgetMin: string | null;
-  budgetMax: string | null;
-  urgency: string | null;
-  status: string;
-  createdAt: string;
-  poster?: {
-    id: string;
-    fullName: string;
-    username: string;
-  };
-}
+import type { Job } from '@/types/api';
 
 export interface JobFilters {
   status?: string;
