@@ -506,7 +506,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/service-providers", async (req, res) => {
     try {
       const role = req.query.role as string;
-      const providers = await storage.getServiceProviders(role);
+      const city = req.query.city as string;
+      const state = req.query.state as string;
+      
+      const providers = await storage.searchProviders({ role, city, state });
       res.json(providers);
     } catch (error) {
       res.status(500).json({ error: "Failed to get service providers" });

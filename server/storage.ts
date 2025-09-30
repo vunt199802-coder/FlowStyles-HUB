@@ -18,6 +18,11 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getServiceProviders(role?: string): Promise<User[]>;
+  searchProviders(filters: { role?: string; city?: string; state?: string }): Promise<Array<User & { 
+    services?: Service[]; 
+    portfolioPreview?: PortfolioImage[]; 
+    availabilitySnippet?: string;
+  }>>;
   
   // Service Categories
   getServiceCategories(): Promise<ServiceCategory[]>;
@@ -140,6 +145,57 @@ export class MemStorage implements IStorage {
         return user.role === role;
       }
       return user.role === 'stylist';
+    });
+  }
+
+  async searchProviders(filters: { role?: string; city?: string; state?: string }): Promise<Array<User & { 
+    services?: Service[]; 
+    portfolioPreview?: PortfolioImage[]; 
+    availabilitySnippet?: string;
+  }>> {
+    let providers = Array.from(this.users.values()).filter(user => user.role === 'stylist');
+    
+    if (filters.role) {
+      providers = providers.filter(user => user.role === filters.role);
+    }
+    
+    if (filters.city) {
+      providers = providers.filter(user => 
+        user.city?.toLowerCase().includes(filters.city!.toLowerCase())
+      );
+    }
+    
+    if (filters.state) {
+      providers = providers.filter(user => 
+        user.state?.toLowerCase() === filters.state!.toLowerCase()
+      );
+    }
+    
+    return providers.map(provider => {
+      const services = Array.from(this.services.values())
+        .filter(s => s.hairstylistId === provider.id)
+        .slice(0, 3);
+      
+      const portfolioPreview = Array.from(this.portfolioImages.values())
+        .filter(img => img.hairstylistId === provider.id)
+        .slice(0, 3);
+      
+      const upcomingBookings = Array.from(this.bookings.values())
+        .filter(b => b.hairstylistId === provider.id && new Date(b.appointmentDate) > new Date())
+        .length;
+      
+      const availabilitySnippet = upcomingBookings > 5 
+        ? "Limited availability" 
+        : upcomingBookings > 2 
+        ? "Accepting new clients" 
+        : "Immediate availability";
+      
+      return {
+        ...provider,
+        services,
+        portfolioPreview,
+        availabilitySnippet
+      };
     });
   }
 
@@ -760,10 +816,6 @@ export class MemStorage implements IStorage {
       jobs = jobs.filter(job => job.clientId === filters.clientId);
     }
     
-    if (filters?.status) {
-      jobs = jobs.filter(job => job.status === filters.status);
-    }
-    
     return jobs.map(job => ({
       ...job,
       client: this.users.get(job.clientId)
@@ -777,9 +829,18 @@ export class MemStorage implements IStorage {
   async createJob(job: InsertJob): Promise<Job> {
     const id = randomUUID();
     const newJob: Job = {
-      ...job,
       id,
-      status: "open",
+      clientId: job.clientId,
+      title: job.title,
+      description: job.description,
+      category: job.category,
+      budgetMin: job.budgetMin || null,
+      budgetMax: job.budgetMax || null,
+      urgency: job.urgency || null,
+      city: job.city || null,
+      state: job.state || null,
+      zip: job.zip || null,
+      expiresAt: job.expiresAt || null,
       createdAt: new Date()
     };
     this.jobs.set(id, newJob);
@@ -790,9 +851,7 @@ export class MemStorage implements IStorage {
     const job = this.jobs.get(id);
     if (!job) return undefined;
     
-    const updated = { ...job, status };
-    this.jobs.set(id, updated);
-    return updated;
+    return job;
   }
 
   async deleteJob(id: string): Promise<boolean> {
