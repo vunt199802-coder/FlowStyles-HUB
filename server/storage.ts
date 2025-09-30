@@ -7,7 +7,8 @@ import {
   type Message, type InsertMessage,
   type MessageTemplate, type InsertMessageTemplate,
   type HairHistory, type InsertHairHistory,
-  type Conversation
+  type Conversation,
+  type Job, type InsertJob
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -71,6 +72,13 @@ export interface IStorage {
   createHairHistoryEntry(entry: InsertHairHistory): Promise<HairHistory>;
   updateHairHistoryEntry(id: string, entry: Partial<InsertHairHistory>): Promise<HairHistory | undefined>;
   deleteHairHistoryEntry(id: string): Promise<boolean>;
+  
+  // Jobs
+  getJobs(filters?: { clientId?: string; status?: string }): Promise<(Job & { client?: Partial<User> })[]>;
+  getJob(id: string): Promise<Job | undefined>;
+  createJob(job: InsertJob): Promise<Job>;
+  updateJobStatus(id: string, status: string): Promise<Job | undefined>;
+  deleteJob(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -82,6 +90,7 @@ export class MemStorage implements IStorage {
   private messages: Map<string, Message>;
   private messageTemplates: Map<string, MessageTemplate>;
   private hairHistory: Map<string, HairHistory>;
+  private jobs: Map<string, Job>;
 
   constructor() {
     this.users = new Map();
@@ -92,6 +101,7 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.messageTemplates = new Map();
     this.hairHistory = new Map();
+    this.jobs = new Map();
     this.seedData();
   }
 
@@ -741,6 +751,52 @@ export class MemStorage implements IStorage {
         createdAt: new Date() 
       });
     });
+  }
+
+  async getJobs(filters?: { clientId?: string; status?: string }): Promise<(Job & { client?: Partial<User> })[]> {
+    let jobs = Array.from(this.jobs.values());
+    
+    if (filters?.clientId) {
+      jobs = jobs.filter(job => job.clientId === filters.clientId);
+    }
+    
+    if (filters?.status) {
+      jobs = jobs.filter(job => job.status === filters.status);
+    }
+    
+    return jobs.map(job => ({
+      ...job,
+      client: this.users.get(job.clientId)
+    }));
+  }
+
+  async getJob(id: string): Promise<Job | undefined> {
+    return this.jobs.get(id);
+  }
+
+  async createJob(job: InsertJob): Promise<Job> {
+    const id = randomUUID();
+    const newJob: Job = {
+      ...job,
+      id,
+      status: "open",
+      createdAt: new Date()
+    };
+    this.jobs.set(id, newJob);
+    return newJob;
+  }
+
+  async updateJobStatus(id: string, status: string): Promise<Job | undefined> {
+    const job = this.jobs.get(id);
+    if (!job) return undefined;
+    
+    const updated = { ...job, status };
+    this.jobs.set(id, updated);
+    return updated;
+  }
+
+  async deleteJob(id: string): Promise<boolean> {
+    return this.jobs.delete(id);
   }
 }
 

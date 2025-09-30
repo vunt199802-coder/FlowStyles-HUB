@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertServiceCategorySchema, insertServiceSchema, insertBookingSchema,
   insertPortfolioImageSchema, insertMessageSchema, insertMessageTemplateSchema,
-  insertHairHistorySchema
+  insertHairHistorySchema, insertJobSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -437,6 +437,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete hair history entry" });
+    }
+  });
+
+  // Jobs
+  app.get("/api/jobs", async (req, res) => {
+    try {
+      const clientId = req.query.clientId as string;
+      const status = req.query.status as string;
+      const jobs = await storage.getJobs({ clientId, status });
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get jobs" });
+    }
+  });
+
+  app.get("/api/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get job" });
+    }
+  });
+
+  app.post("/api/jobs", async (req, res) => {
+    try {
+      const parsed = insertJobSchema.parse(req.body);
+      const job = await storage.createJob(parsed);
+      res.status(201).json(job);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid job data" });
+    }
+  });
+
+  app.patch("/api/jobs/:id/status", async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+      }
+      const job = await storage.updateJobStatus(req.params.id, status);
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update job status" });
+    }
+  });
+
+  app.delete("/api/jobs/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteJob(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete job" });
     }
   });
 
